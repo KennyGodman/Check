@@ -35,7 +35,7 @@ export default function InflowMonitor({
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-black tracking-tight text-neutral-900 dark:text-white font-sans">Smart Inflow Monitor</h2>
-          <p className="text-gray-505 text-sm mt-1">
+          <p className="text-neutral-550 dark:text-neutral-300 text-sm mt-1">
             Analyzing transaction streams from the highest ROI wallets.
           </p>
         </div>
@@ -54,7 +54,7 @@ export default function InflowMonitor({
           <div className="absolute right-3 top-3 text-purple-950/20 group-hover:text-purple-900/30 transition-colors duration-300">
             <Compass size={80} strokeWidth={1} />
           </div>
-          <p className="text-xs text-gray-505 font-semibold tracking-wider uppercase">Wallets Tracked</p>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 font-semibold tracking-wider uppercase">Wallets Tracked</p>
           <h3 className="text-3xl font-extrabold text-main mt-2 font-mono">{totalWallets}</h3>
           <p className="text-xs text-emerald-500 mt-2 flex items-center gap-1 font-medium">
             <span>ROI Average: {Math.round(wallets.reduce((acc, w) => acc + w.roi, 0) / wallets.length)}%</span>
@@ -65,16 +65,16 @@ export default function InflowMonitor({
           <div className="absolute right-3 top-3 text-emerald-950/20 group-hover:text-emerald-900/30 transition-colors duration-300">
             <TrendingUp size={80} strokeWidth={1} />
           </div>
-          <p className="text-xs text-gray-505 font-semibold tracking-wider uppercase">Net Profit Logged</p>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 font-semibold tracking-wider uppercase">Net Profit Logged</p>
           <h3 className="text-3xl font-extrabold text-main mt-2 font-mono">{formatUsd(totalProfit)}</h3>
-          <p className="text-xs text-gray-505 mt-2">Combined verified profit payouts</p>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2">Combined verified profit payouts</p>
         </div>
 
         <div className="glass-panel rounded-2xl p-5 border border-main hover:border-blue-800/25 transition-all duration-300 relative overflow-hidden group">
           <div className="absolute right-3 top-3 text-blue-950/20 group-hover:text-blue-900/30 transition-colors duration-300">
             <Activity size={80} strokeWidth={1} />
           </div>
-          <p className="text-xs text-gray-505 font-semibold tracking-wider uppercase">Avg Win Rate</p>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 font-semibold tracking-wider uppercase">Avg Win Rate</p>
           <h3 className="text-3xl font-extrabold text-main mt-2 font-mono">{avgWinRate}%</h3>
           <p className="text-xs text-blue-450 mt-2 font-medium">Outperforming standard DEX traders by ~30%</p>
         </div>
@@ -83,8 +83,8 @@ export default function InflowMonitor({
           <div className="absolute right-3 top-3 text-amber-950/20 group-hover:text-amber-900/30 transition-colors duration-300">
             <AlertCircle size={80} strokeWidth={1} />
           </div>
-          <p className="text-xs text-gray-505 font-semibold tracking-wider uppercase">Active Inflows</p>
-          <h3 className="text-3xl font-extrabold text-main mt-2 font-mono">{activeInflowsCount} <span className="text-xs text-gray-550 font-normal">Tokens</span></h3>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 font-semibold tracking-wider uppercase">Active Inflows</p>
+          <h3 className="text-3xl font-extrabold text-main mt-2 font-mono">{activeInflowsCount} <span className="text-xs text-neutral-500 dark:text-neutral-450 font-normal">Tokens</span></h3>
           <p className="text-xs text-amber-450 mt-2 font-medium flex items-center gap-1">
             <span>High probability alerts active</span>
           </p>
@@ -164,7 +164,7 @@ export default function InflowMonitor({
                       <span className={`font-extrabold font-mono text-sm ${isBuy ? 'text-emerald-500' : 'text-red-500'}`}>
                         {isBuy ? '+' : '-'}{formatUsd(tx.valueUsd)}
                       </span>
-                      <span className="text-[10px] text-gray-550 mt-1 font-mono">{new Date(tx.timestamp).toLocaleTimeString()}</span>
+                      <span className="text-[10px] text-neutral-500 dark:text-neutral-400 mt-1 font-mono">{new Date(tx.timestamp).toLocaleTimeString()}</span>
                     </div>
                   </div>
                 );
@@ -202,24 +202,24 @@ export default function InflowMonitor({
                         >
                           ${token.symbol}
                         </button>
-                        <span className="text-[10px] text-gray-505 font-mono bg-neutral-100 dark:bg-neutral-900 border border-main px-1 py-0.5 rounded">
+                        <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono bg-neutral-100 dark:bg-neutral-900 border border-main px-1 py-0.5 rounded">
                           {token.category}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-555 mt-1">{token.name}</p>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">{token.name}</p>
                     </div>
                     
                     <div className="text-right">
                       <span className="text-sm font-extrabold text-emerald-500 font-mono">
                         {formatUsd(token.smartInflow)}
                       </span>
-                      <p className="text-[10px] text-gray-550 mt-1">Smart Capital</p>
+                      <p className="text-[10px] text-neutral-500 dark:text-neutral-400 mt-1">Smart Capital</p>
                     </div>
                   </div>
 
                   {/* Overlap Info */}
                   <div className="mt-4 pt-3 border-t border-main flex justify-between items-center">
-                    <span className="text-xs text-gray-555 flex items-center gap-1.5 font-sans">
+                    <span className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 font-sans">
                       <span className="w-1.5 h-1.5 rounded-full bg-purple-600 animate-pulse"></span>
                       Overlap: {token.smartHoldersCount} Smart Wallets
                     </span>
