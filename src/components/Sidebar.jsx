@@ -29,7 +29,7 @@ export default function Sidebar({
           </div>
           <div>
             <h1 className="font-bold text-lg leading-tight tracking-tight text-main flex items-center gap-1.5 font-sans">
-              CHECK<span className="text-purple-600 dark:text-purple-400 font-normal text-xs px-1.5 py-0.5 rounded bg-purple-950/40 border border-purple-800/30">ALPHA</span>
+              CHECK
             </h1>
             <p className="text-[10px] text-gray-500 font-mono tracking-widest font-semibold font-sans">SMART MONEY TRACKER</p>
           </div>
