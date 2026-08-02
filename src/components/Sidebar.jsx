@@ -46,7 +46,7 @@ export default function Sidebar({
                 onClick={() => setActiveTab(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group text-left ${
                   isActive
-                    ? 'bg-purple-600 text-white font-semibold shadow-md shadow-purple-950/20'
+                    ? 'bg-purple-600 text-white font-extrabold shadow-md shadow-purple-950/20'
                     : 'text-muted hover:bg-neutral-900/10 dark:hover:bg-neutral-900/60 hover:text-main border border-transparent'
                 }`}
               >

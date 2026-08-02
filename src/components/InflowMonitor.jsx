@@ -34,7 +34,7 @@ export default function InflowMonitor({
       {/* Upper header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-extrabold tracking-tight text-main font-sans">Smart Inflow Monitor</h2>
+          <h2 className="text-3xl font-black tracking-tight text-neutral-900 dark:text-white font-sans">Smart Inflow Monitor</h2>
           <p className="text-gray-505 text-sm mt-1">
             Analyzing transaction streams from the highest ROI wallets.
           </p>
