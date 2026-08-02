@@ -79,7 +79,7 @@ export default function SmartLeaderboard({ wallets, onAddWallet, onDeleteWallet,
         </div>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-750 dark:bg-purple-700 to-indigo-900 hover:from-purple-650 hover:to-indigo-850 text-white rounded-xl text-sm font-bold transition-all duration-200 shadow-md border border-purple-550/20 hover:scale-[1.02] glow-purple font-sans"
+          className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-sm font-bold transition-all duration-200 shadow-md border border-transparent hover:scale-[1.02] glow-purple font-sans"
         >
           <Plus size={16} />
           Track Custom Wallet
@@ -93,7 +93,7 @@ export default function SmartLeaderboard({ wallets, onAddWallet, onDeleteWallet,
             <h4 className="font-bold text-main text-lg font-sans">Add Custom Blockchain Wallet</h4>
             <button 
               onClick={() => setShowAddForm(false)} 
-              className="text-gray-500 hover:text-gray-300 text-sm"
+              className="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg border border-transparent transition-all"
             >
               Cancel
             </button>
@@ -164,7 +164,7 @@ export default function SmartLeaderboard({ wallets, onAddWallet, onDeleteWallet,
 
             <button
               type="submit"
-              className="w-full py-3 bg-purple-700 hover:bg-purple-800 text-white text-sm font-bold rounded-xl transition-all shadow-md shadow-purple-950/20"
+              className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold rounded-xl transition-all shadow-md shadow-purple-950/20"
             >
               Add Wallet to Scanners
             </button>
@@ -194,8 +194,8 @@ export default function SmartLeaderboard({ wallets, onAddWallet, onDeleteWallet,
                 onClick={() => setFilterStyle(style)}
                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
                   filterStyle === style 
-                    ? 'bg-neutral-200 dark:bg-neutral-850 text-main font-semibold' 
-                    : 'text-muted hover:text-main'
+                    ? 'bg-purple-600 text-white font-semibold shadow-sm' 
+                    : 'text-muted hover:bg-neutral-200/50 dark:hover:bg-neutral-900'
                 }`}
               >
                 {style}
@@ -281,7 +281,7 @@ export default function SmartLeaderboard({ wallets, onAddWallet, onDeleteWallet,
                       <td className="py-4.5 px-6 text-center" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => onDeleteWallet(wallet.address)}
-                          className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-950/20 rounded-lg transition-colors"
+                          className="p-1.5 bg-purple-600 hover:bg-purple-705 text-white rounded-lg transition-colors shadow-sm"
                           title="Delete Wallet"
                         >
                           <Trash2 size={14} />
@@ -320,7 +320,7 @@ export default function SmartLeaderboard({ wallets, onAddWallet, onDeleteWallet,
                                           <td className="py-2.5 px-4 font-bold text-main">
                                             <button 
                                               onClick={() => onSelectToken(h.symbol)}
-                                              className="hover:text-purple-500 text-left font-extrabold"
+                                              className="bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-extrabold px-1.5 py-0.5 rounded font-mono transition-colors"
                                             >
                                               ${h.symbol}
                                             </button>
@@ -375,7 +375,7 @@ export default function SmartLeaderboard({ wallets, onAddWallet, onDeleteWallet,
                                               </span>
                                               <button 
                                                 onClick={() => onSelectToken(hist.tokenSymbol)}
-                                                className="font-extrabold text-main hover:text-purple-500"
+                                                className="bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-extrabold px-1 py-0.5 rounded font-mono transition-colors"
                                               >
                                                 ${hist.tokenSymbol}
                                               </button>

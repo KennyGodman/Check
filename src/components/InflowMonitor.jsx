@@ -41,7 +41,7 @@ export default function InflowMonitor({
         </div>
         <button
           onClick={triggerSimulatedTrade}
-          className="flex items-center gap-2 px-4 py-2 bg-purple-750 dark:bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-sm font-bold transition-all duration-200 shadow-lg shadow-purple-950/20 border border-purple-500/20 hover:scale-105 active:scale-95 group"
+          className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-sm font-bold transition-all duration-200 shadow-lg shadow-purple-950/20 border border-purple-500/20 hover:scale-105 active:scale-95 group"
         >
           <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-500" />
           Force On-Chain Scan
@@ -136,20 +136,20 @@ export default function InflowMonitor({
                         {/* Wallet metadata */}
                         <button 
                           onClick={() => onSelectWallet(tx.walletAddress)}
-                          className="text-xs text-purple-700 dark:text-purple-400 hover:text-purple-650 dark:hover:text-purple-300 font-semibold font-mono tracking-tight flex items-center gap-1.5 hover:underline"
+                          className="bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-semibold font-mono px-2 py-0.5 rounded transition-all duration-150 inline-flex items-center gap-1"
                         >
-                          <Wallet size={12} />
+                          <Wallet size={10} />
                           {tx.walletName}
                         </button>
                         
                         {/* Token Details */}
-                        <div className="mt-1 flex items-center gap-1.5">
+                        <div className="mt-1.5 flex items-center gap-1.5">
                           <span className="text-sm font-bold text-main">
                             {tx.amount.toLocaleString()}
                           </span>
                           <button 
                             onClick={() => onSelectToken(tx.tokenSymbol)}
-                            className="text-sm font-extrabold text-main bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-850 border border-main px-1.5 py-0.5 rounded text-[11px] font-mono hover:text-purple-600 dark:hover:text-purple-300 transition-colors"
+                            className="bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-extrabold px-1.5 py-0.5 rounded font-mono transition-colors"
                           >
                             ${tx.tokenSymbol}
                           </button>
@@ -198,7 +198,7 @@ export default function InflowMonitor({
                       <div className="flex items-center gap-2">
                         <button 
                           onClick={() => onSelectToken(token.symbol)}
-                          className="font-extrabold text-main text-base hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                          className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold px-2 py-0.5 rounded transition-colors"
                         >
                           ${token.symbol}
                         </button>
@@ -225,7 +225,7 @@ export default function InflowMonitor({
                     </span>
                     <button 
                       onClick={() => onSelectToken(token.symbol)}
-                      className="text-xs text-purple-650 dark:text-purple-400 hover:text-purple-550 font-semibold flex items-center hover:underline"
+                      className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg flex items-center transition-all shadow-sm"
                     >
                       View Details &rarr;
                     </button>

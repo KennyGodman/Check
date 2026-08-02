@@ -51,7 +51,7 @@ export default function TokenDetailModal({ token, wallets, onClose }) {
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute right-4.5 top-4.5 p-2 bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-850 text-gray-500 hover:text-main rounded-xl border border-main transition-colors"
+          className="absolute right-4.5 top-4.5 p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl border border-transparent transition-colors shadow-md shadow-purple-950/20"
         >
           <X size={16} />
         </button>
@@ -73,10 +73,10 @@ export default function TokenDetailModal({ token, wallets, onClose }) {
               <span className="text-[10px] font-mono text-gray-500 truncate select-all">{token.address}</span>
               <button 
                 onClick={copyAddress}
-                className="text-gray-500 hover:text-purple-500 transition-colors shrink-0"
+                className="p-1 bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors shrink-0 shadow-sm"
                 title="Copy Address"
               >
-                {copied ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                {copied ? <Check size={12} className="text-white" /> : <Copy size={12} />}
               </button>
             </div>
           </div>

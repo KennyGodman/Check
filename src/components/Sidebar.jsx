@@ -46,14 +46,14 @@ export default function Sidebar({
                 onClick={() => setActiveTab(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group text-left ${
                   isActive
-                    ? 'bg-purple-950/20 text-purple-700 dark:text-purple-300 border border-purple-800/20 font-semibold'
+                    ? 'bg-purple-600 text-white font-semibold shadow-md shadow-purple-950/20'
                     : 'text-muted hover:bg-neutral-900/10 dark:hover:bg-neutral-900/60 hover:text-main border border-transparent'
                 }`}
               >
                 <Icon
                   size={18}
                   className={`transition-colors duration-200 ${
-                    isActive ? 'text-purple-700 dark:text-purple-400' : 'text-gray-400 group-hover:text-main'
+                    isActive ? 'text-white' : 'text-gray-400 group-hover:text-main'
                   }`}
                 />
                 <span className="text-sm">{item.label}</span>
@@ -73,16 +73,16 @@ export default function Sidebar({
           <span className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest">Theme Mode</span>
           <button
             onClick={onToggleTheme}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-850 border border-main text-main transition-all duration-150 text-xs font-bold shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white transition-all duration-150 text-xs font-bold shadow-sm border border-transparent"
           >
             {theme === 'light' ? (
               <>
-                <Moon size={14} className="text-purple-700" />
+                <Moon size={14} className="text-white" />
                 <span>Dark</span>
               </>
             ) : (
               <>
-                <Sun size={14} className="text-yellow-500" />
+                <Sun size={14} className="text-white" />
                 <span>Light</span>
               </>
             )}

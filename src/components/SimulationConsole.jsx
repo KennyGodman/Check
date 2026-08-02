@@ -117,11 +117,7 @@ export default function SimulationConsole({
             <div className="flex gap-3">
               <button
                 onClick={() => setIsSimulationRunning(!isSimulationRunning)}
-                className={`flex-1 py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all duration-200 border ${
-                  isSimulationRunning
-                    ? 'bg-red-950/20 hover:bg-red-900/10 text-red-400 border-red-900/30'
-                    : 'bg-emerald-950/20 hover:bg-emerald-900/10 text-emerald-400 border-emerald-900/30 glow-emerald'
-                }`}
+                className="flex-1 py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all duration-200 border border-transparent shadow-md shadow-purple-950/20"
               >
                 {isSimulationRunning ? (
                   <>
@@ -163,14 +159,14 @@ export default function SimulationConsole({
             <div className="pt-2 border-t border-main grid grid-cols-2 gap-2 text-xs">
               <button
                 onClick={onResetData}
-                className="py-2.5 px-3 bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-850 text-main font-semibold rounded-xl border border-main transition-colors flex items-center justify-center gap-1.5"
+                className="py-2.5 px-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl border border-transparent transition-colors flex items-center justify-center gap-1.5 shadow-sm"
               >
                 <RefreshCw size={12} />
                 Reset Datasets
               </button>
               <button
                 onClick={onClearData}
-                className="py-2.5 px-3 bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-850 text-red-500 font-semibold rounded-xl border border-main hover:border-red-950/40 transition-colors flex items-center justify-center gap-1.5"
+                className="py-2.5 px-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl border border-transparent transition-colors flex items-center justify-center gap-1.5 shadow-sm"
               >
                 Clear Trade Feed
               </button>

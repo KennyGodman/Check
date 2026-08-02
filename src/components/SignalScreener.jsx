@@ -121,8 +121,8 @@ export default function SignalScreener({
                 onClick={() => setCategoryFilter(cat)}
                 className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors flex-1 text-center ${
                   categoryFilter === cat 
-                    ? 'bg-neutral-200 dark:bg-neutral-850 text-main font-semibold' 
-                    : 'text-muted hover:text-main'
+                    ? 'bg-purple-600 text-white font-semibold shadow-sm' 
+                    : 'text-muted hover:bg-neutral-200/50 dark:hover:bg-neutral-900'
                 }`}
               >
                 {cat}
@@ -221,7 +221,7 @@ export default function SignalScreener({
                     </div>
                     <button
                       onClick={() => onSelectToken(token.symbol)}
-                      className="flex items-center gap-1.5 text-xs text-purple-700 dark:text-purple-400 hover:text-purple-650 dark:hover:text-purple-300 font-semibold hover:underline font-mono"
+                      className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-2 py-1 rounded-lg transition-all font-sans"
                     >
                       <Eye size={12} />
                       Analyze Flows
@@ -235,8 +235,8 @@ export default function SignalScreener({
                       disabled={!walletAddress}
                       className={`w-full py-2 rounded-xl text-[11px] font-extrabold uppercase border flex items-center justify-center gap-1.5 transition-all duration-200 ${
                         walletAddress
-                          ? 'bg-purple-950/20 text-purple-605 dark:text-purple-300 border-purple-800/30 hover:bg-purple-950/40 hover:text-main'
-                          : 'bg-neutral-100 dark:bg-neutral-900 text-gray-400 dark:text-neutral-600 border-main cursor-not-allowed'
+                          ? 'bg-purple-600 hover:bg-purple-700 text-white border-transparent shadow-md hover:scale-[1.01]'
+                          : 'bg-neutral-100 dark:bg-neutral-900 text-gray-450 dark:text-neutral-650 border-main cursor-not-allowed'
                       }`}
                       title={!walletAddress ? "Connect GenLayer Wallet to register signals on-chain" : "Lock forecast on-chain"}
                     >
@@ -320,8 +320,8 @@ export default function SignalScreener({
                               !walletAddress 
                                 ? 'bg-neutral-100 dark:bg-neutral-900 text-gray-450 dark:text-neutral-600 border-main cursor-not-allowed'
                                 : resolvingSignalId === sig.id
-                                  ? 'bg-purple-950/30 text-purple-700 dark:text-purple-400 border-purple-900/20 animate-pulse'
-                                  : 'bg-purple-900/10 text-purple-700 dark:text-purple-300 border-purple-800/30 hover:bg-purple-900/30'
+                                  ? 'bg-purple-950/30 text-purple-400 border-purple-900/20 animate-pulse'
+                                  : 'bg-purple-600 hover:bg-purple-700 text-white border-transparent shadow-sm'
                             }`}
                           >
                             {resolvingSignalId === sig.id ? "Running Consensus..." : "Verify Target"}
