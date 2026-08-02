@@ -5,6 +5,7 @@ import SmartLeaderboard from './components/SmartLeaderboard';
 import SignalScreener from './components/SignalScreener';
 import TokenDetailModal from './components/TokenDetailModal';
 import SimulationConsole from './components/SimulationConsole';
+import NotificationModal from './components/NotificationModal';
 
 import {
   initialWallets,
@@ -34,6 +35,11 @@ export function App() {
   const [reputation, setReputation] = useState(100);
   const [blockchainSignals, setBlockchainSignals] = useState([]);
   const [resolvingSignalId, setResolvingSignalId] = useState(null);
+
+  // Notification Modal State
+  const [alertState, setAlertState] = useState({ isOpen: false, title: "", message: "" });
+  const triggerAlert = (title, message) => setAlertState({ isOpen: true, title, message });
+  const closeAlert = () => setAlertState(prev => ({ ...prev, isOpen: false }));
 
   // Theme configuration
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
@@ -152,7 +158,7 @@ export function App() {
   // Submit prediction signal to GenLayer contract
   const handleRegisterSignal = async (token) => {
     if (!walletAddress) {
-      alert("Please connect your GenLayer wallet first.");
+      triggerAlert("Wallet Connection Required", "Please connect your GenLayer wallet first.");
       return;
     }
 
@@ -169,7 +175,7 @@ export function App() {
       });
       console.log("GenLayer Transaction Hash:", tx);
       await loadBlockchainData(walletAddress);
-      alert(`Signal for $${token.symbol} successfully registered on GenLayer! Tx Hash: ${tx.slice(0, 10)}...`);
+      triggerAlert("Signal Registered", `Signal for $${token.symbol} successfully registered on GenLayer! Tx Hash: ${tx.slice(0, 10)}...`);
     } catch (err) {
       console.warn("Smart contract write failed, creating local simulation prediction:", err.message);
       const newId = blockchainSignals.length;
@@ -187,7 +193,7 @@ export function App() {
         timestamp: Date.now()
       };
       setBlockchainSignals(prev => [...prev, newSig]);
-      alert(`Signal for $${token.symbol} successfully registered in local simulation mode!`);
+      triggerAlert("Signal Simulation Registered", `Signal for $${token.symbol} successfully registered in local simulation mode!`);
     }
   };
 
@@ -201,7 +207,7 @@ export function App() {
       console.log("Consensus execution Tx Hash:", tx);
       await loadBlockchainData(walletAddress);
       setResolvingSignalId(null);
-      alert(`Consensus execution successful! Verdict updated on-chain.`);
+      triggerAlert("Consensus Successful", `Consensus execution successful! Verdict updated on-chain.`);
     } catch (err) {
       console.warn("Consensus transaction failed, starting client-side validator engine:", err.message);
       
@@ -233,7 +239,7 @@ export function App() {
           });
         });
         setResolvingSignalId(null);
-        alert(`GenLayer consensus simulation complete! Validation checks logged in the ledger.`);
+        triggerAlert("Consensus Simulation Complete", `GenLayer consensus simulation complete! Validation checks logged in the ledger.`);
       }, 2500);
     }
   };
@@ -517,6 +523,14 @@ export function App() {
           onClose={() => setSelectedTokenSymbol(null)}
         />
       )}
+
+      {/* Custom Notification Modal */}
+      <NotificationModal
+        isOpen={alertState.isOpen}
+        title={alertState.title}
+        message={alertState.message}
+        onClose={closeAlert}
+      />
     </div>
   );
 }
