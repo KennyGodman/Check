@@ -1,5 +1,6 @@
 import React from 'react';
 import { TrendingUp, Activity, Compass, AlertCircle, RefreshCw, Wallet } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function InflowMonitor({ 
   transactions, 
@@ -34,10 +35,20 @@ export default function InflowMonitor({
       {/* Upper header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-black tracking-tight text-neutral-900 dark:text-white font-sans">Smart Inflow Monitor</h2>
-          <p className="text-neutral-550 dark:text-neutral-300 text-sm mt-1">
+          <motion.h2
+            animate={{ color: ["var(--text-main)", "#a855f7", "var(--text-main)"] }}
+            transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+            className="text-3xl font-black tracking-tight font-sans"
+          >
+            Smart Inflow Monitor
+          </motion.h2>
+          <motion.p
+            animate={{ x: [-8, 8] }}
+            transition={{ repeat: Infinity, repeatType: "reverse", duration: 3, ease: "easeInOut" }}
+            className="text-neutral-550 dark:text-neutral-300 text-sm mt-1"
+          >
             Analyzing transaction streams from the highest ROI wallets.
-          </p>
+          </motion.p>
         </div>
         <button
           onClick={triggerSimulatedTrade}
