@@ -98,7 +98,7 @@ export default function SimulationConsole({
       {/* Header */}
       <div>
         <h2 className="text-3xl font-extrabold tracking-tight text-main">Simulation Console</h2>
-        <p className="text-gray-505 text-sm mt-1">
+        <p className="text-neutral-550 dark:text-neutral-300 text-sm mt-1">
           Adjust simulation parameters, inject customized trades, and inspect system log streams.
         </p>
       </div>
@@ -133,7 +133,7 @@ export default function SimulationConsole({
 
             {/* Stream Speed Settings */}
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-gray-505 uppercase tracking-wider">Stream Trigger Speed</label>
+              <label className="text-xs font-semibold text-neutral-500 dark:text-neutral-450 uppercase tracking-wider">Stream Trigger Speed</label>
               <div className="grid grid-cols-3 gap-2 bg-neutral-100 dark:bg-neutral-950 p-1 rounded-xl border border-main">
                 {[
                   { label: 'Slow (12s)', val: 12000 },

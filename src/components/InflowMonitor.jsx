@@ -106,7 +106,7 @@ export default function InflowMonitor({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Columns: Live Trade Stream */}
         <div className="lg:col-span-2 glass-panel rounded-2xl border border-main overflow-hidden flex flex-col h-[520px]">
-          <div className="p-5 border-b border-main bg-neutral-950/30 flex items-center justify-between">
+          <div className="p-5 border-b border-main bg-neutral-100/50 dark:bg-neutral-950/30 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <span className="flex h-2.5 w-2.5 relative">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-650 opacity-75"></span>
@@ -130,15 +130,15 @@ export default function InflowMonitor({
                   <div
                     key={tx.id}
                     className={`p-3.5 rounded-xl border border-transparent hover:border-main transition-all duration-200 flex justify-between items-center group relative overflow-hidden ${
-                      isBuy ? 'hover:bg-emerald-950/10' : 'hover:bg-red-950/10'
+                      isBuy ? 'hover:bg-emerald-100/50 dark:hover:bg-emerald-950/10' : 'hover:bg-red-100/50 dark:hover:bg-red-950/10'
                     }`}
                   >
                     <div className="flex items-center gap-4.5 z-10">
                       {/* Buy/Sell Indicator badge */}
                       <span className={`w-20 text-center font-bold font-mono text-xs px-2.5 py-1.5 rounded-lg border uppercase tracking-wider ${
                         isBuy 
-                          ? 'text-emerald-400 bg-emerald-950/30 border-emerald-900/40 glow-emerald' 
-                          : 'text-red-400 bg-red-950/30 border-red-900/40'
+                          ? 'text-emerald-700 bg-emerald-100 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/30 dark:border-emerald-900/40 glow-emerald' 
+                          : 'text-red-700 bg-red-100 border-red-200 dark:text-red-400 dark:bg-red-950/30 dark:border-red-900/40'
                       }`}>
                         {tx.type}
                       </span>
@@ -186,9 +186,9 @@ export default function InflowMonitor({
 
         {/* Right 1 Column: Top Inflows */}
         <div className="lg:col-span-1 glass-panel rounded-2xl border border-main overflow-hidden flex flex-col h-[520px]">
-          <div className="p-5 border-b border-main bg-neutral-950/30 flex justify-between items-center">
+          <div className="p-5 border-b border-main bg-neutral-100/50 dark:bg-neutral-950/30 flex justify-between items-center">
             <h4 className="font-bold text-main tracking-tight font-sans">Alpha Inflows</h4>
-            <span className="text-[10px] text-purple-600 dark:text-purple-400 uppercase font-mono px-2 py-0.5 rounded bg-purple-950/30 border border-purple-800/30">
+            <span className="text-[10px] text-purple-600 dark:text-purple-400 uppercase font-mono px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/30">
               Total Buys
             </span>
           </div>
@@ -202,7 +202,7 @@ export default function InflowMonitor({
               topInflows.map((token) => (
                 <div 
                   key={token.symbol} 
-                  className="p-4 rounded-xl bg-neutral-95/50 dark:bg-neutral-950/50 border border-main hover:border-neutral-200 dark:hover:border-neutral-800 transition-all duration-300 group flex flex-col justify-between"
+                  className="p-4 rounded-xl bg-neutral-100/50 dark:bg-neutral-950/50 border border-main hover:border-neutral-200 dark:hover:border-neutral-800 transition-all duration-300 group flex flex-col justify-between"
                 >
                   <div className="flex justify-between items-start">
                     <div>

@@ -214,5 +214,5 @@
 }
 
 .radial-glow {
-  background: radial-gradient(circle 800px at 50% 200px, var(--radial-glow-color), transparent);
+  background-image: radial-gradient(circle 800px at 50% 200px, var(--radial-glow-color), transparent);
 }

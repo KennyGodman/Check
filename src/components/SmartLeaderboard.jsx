@@ -73,7 +73,7 @@ export default function SmartLeaderboard({ wallets, onAddWallet, onDeleteWallet,
       <div className="flex justify-between items-start">
         <div>
           <h2 className="text-3xl font-extrabold tracking-tight text-main font-sans">Smart Wallets Directory</h2>
-          <p className="text-gray-405 text-sm mt-1">
+          <p className="text-neutral-550 dark:text-neutral-300 text-sm mt-1">
             Browse and monitor wallets that have proven high-performance edge.
           </p>
         </div>

@@ -33,9 +33,9 @@ export default function SignalScreener({
   };
 
   const getProbabilityBadge = (score) => {
-    if (score >= 75) return 'text-amber-500 bg-amber-950/20 border-amber-900/40 glow-amber';
-    if (score >= 60) return 'text-emerald-500 bg-emerald-950/20 border-emerald-900/40 glow-emerald';
-    return 'text-blue-500 bg-blue-950/20 border-blue-900/40';
+    if (score >= 75) return 'text-amber-700 bg-amber-100 border-amber-200 dark:text-amber-500 dark:bg-amber-950/20 dark:border-amber-900/40 glow-amber';
+    if (score >= 60) return 'text-emerald-700 bg-emerald-100 border-emerald-200 dark:text-emerald-500 dark:bg-emerald-950/20 dark:border-emerald-900/40 glow-emerald';
+    return 'text-blue-700 bg-blue-100 border-blue-200 dark:text-blue-500 dark:bg-blue-950/20 dark:border-blue-900/40';
   };
 
   const getCategoryIcon = (cat) => {
@@ -89,7 +89,7 @@ export default function SignalScreener({
             Emerging tokens sorted by probability of near-term velocity moves.
           </p>
         </div>
-        <div className="flex items-center gap-2 p-3 bg-purple-950/10 border border-purple-900/25 rounded-2xl max-w-sm">
+        <div className="flex items-center gap-2 p-3 bg-purple-100 dark:bg-purple-950/10 border border-purple-200 dark:border-purple-900/25 rounded-2xl max-w-sm">
           <AlertTriangle size={18} className="text-purple-500 shrink-0 animate-pulse" />
           <p className="text-[11px] text-purple-700 dark:text-purple-300 leading-normal">
             <strong>Move Probability Score (60-70% win-rate threshold)</strong> indicates historical overlap triggers where smart wallets lead to 2-5x price moves.
@@ -100,7 +100,7 @@ export default function SignalScreener({
       {/* Filters and options panel */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-2xl glass-panel border border-main">
         {/* Search */}
-        <div className="flex items-center gap-2.5 bg-neutral-95/60 dark:bg-neutral-950/60 border border-main rounded-xl px-3.5 py-2">
+        <div className="flex items-center gap-2.5 bg-neutral-100/60 dark:bg-neutral-950/60 border border-main rounded-xl px-3.5 py-2">
           <Search size={16} className="text-gray-500" />
           <input
             type="text"
@@ -236,7 +236,7 @@ export default function SignalScreener({
                       className={`w-full py-2 rounded-xl text-[11px] font-extrabold uppercase border flex items-center justify-center gap-1.5 transition-all duration-200 ${
                         walletAddress
                           ? 'bg-purple-600 hover:bg-purple-700 text-white border-transparent shadow-md hover:scale-[1.01]'
-                          : 'bg-neutral-100 dark:bg-neutral-900 text-gray-450 dark:text-neutral-650 border-main cursor-not-allowed'
+                          : 'bg-neutral-100 dark:bg-neutral-900 text-neutral-400 dark:text-neutral-600 border-main cursor-not-allowed'
                       }`}
                       title={!walletAddress ? "Connect GenLayer Wallet to register signals on-chain" : "Lock forecast on-chain"}
                     >
@@ -318,9 +318,9 @@ export default function SignalScreener({
                             disabled={!walletAddress || resolvingSignalId === sig.id}
                             className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
                               !walletAddress 
-                                ? 'bg-neutral-100 dark:bg-neutral-900 text-gray-450 dark:text-neutral-600 border-main cursor-not-allowed'
+                                ? 'bg-neutral-100 dark:bg-neutral-900 text-neutral-400 dark:text-neutral-600 border-main cursor-not-allowed'
                                 : resolvingSignalId === sig.id
-                                  ? 'bg-purple-950/30 text-purple-400 border-purple-900/20 animate-pulse'
+                                  ? 'bg-purple-100 dark:bg-purple-955/30 text-purple-750 dark:text-purple-400 border-purple-300 dark:border-purple-900/20 animate-pulse'
                                   : 'bg-purple-600 hover:bg-purple-700 text-white border-transparent shadow-sm'
                             }`}
                           >
