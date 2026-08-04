@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 :root {
-  --background: #f9fafb;
+  --background: #eef1f6;
   --panel-bg: rgba(255, 255, 255, 0.85);
   --panel-border: rgba(0, 0, 0, 0.06);
   --text-main: #111827;
   --text-muted: #4b5563;
-  --bg-inner: #f3f4f6;
+  --bg-inner: #e2e8f0;
   --border-main: rgba(0, 0, 0, 0.06);
   --glow-shadow: rgba(109, 40, 217, 0.08);
   --radial-glow-color: rgba(109, 40, 217, 0.025);
@@ -18,7 +18,7 @@
   --card-bg-hover: rgba(255, 255, 255, 0.95);
   --text-inverse: #ffffff;
   --scrollbar-thumb: #d1d5db;
-  --scrollbar-track: #f9fafb;
+  --scrollbar-track: #eef1f6;
 }
 
 .dark {
