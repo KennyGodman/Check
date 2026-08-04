@@ -217,20 +217,20 @@ export default function InflowMonitor({
                           {token.category}
                         </span>
                       </div>
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">{token.name}</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-200 mt-1">{token.name}</p>
                     </div>
                     
                     <div className="text-right">
                       <span className="text-sm font-extrabold text-emerald-500 font-mono">
                         {formatUsd(token.smartInflow)}
                       </span>
-                      <p className="text-[10px] text-neutral-500 dark:text-neutral-400 mt-1">Smart Capital</p>
+                      <p className="text-[10px] text-neutral-600 dark:text-neutral-200 mt-1">Smart Capital</p>
                     </div>
                   </div>
 
                   {/* Overlap Info */}
                   <div className="mt-4 pt-3 border-t border-main flex justify-between items-center">
-                    <span className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 font-sans">
+                    <span className="text-xs text-neutral-600 dark:text-neutral-200 flex items-center gap-1.5 font-sans">
                       <span className="w-1.5 h-1.5 rounded-full bg-purple-600 animate-pulse"></span>
                       Overlap: {token.smartHoldersCount} Smart Wallets
                     </span>

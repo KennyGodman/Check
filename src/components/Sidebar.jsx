@@ -131,7 +131,7 @@ export default function Sidebar({
                 </p>
               </div>
             </div>
-            <div className="text-[10px] font-mono text-gray-505 bg-neutral-100 dark:bg-neutral-900 px-1.5 py-0.5 rounded border border-main">
+            <div className="text-[10px] font-mono font-bold text-white bg-purple-600 px-1.5 py-0.5 rounded border border-purple-500/20 shadow-sm">
               GL-NET
             </div>
           </div>
