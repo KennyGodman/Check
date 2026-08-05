@@ -10,7 +10,8 @@ export default function Sidebar({
   reputation, 
   onConnectWallet,
   theme,
-  onToggleTheme
+  onToggleTheme,
+  isGenLayerConnected
 }) {
   const menuItems = [
     { id: 'dashboard', label: 'Inflow Monitor', icon: LayoutDashboard },
@@ -116,23 +117,38 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* Simulator Engine Status Footer */}
+        {/* GenLayer Node Connection Status Footer */}
         <div className="p-4 border-t border-main">
-          <div className="bg-inner rounded-xl p-3 border border-main flex items-center justify-between">
+          <div className={`rounded-xl p-3 border flex items-center justify-between ${
+            isGenLayerConnected 
+              ? 'bg-emerald-950/10 border-emerald-900/20' 
+              : 'bg-amber-950/10 border-amber-900/20'
+          }`}>
             <div className="flex items-center gap-2.5">
               <span className="flex h-2.5 w-2.5 relative">
-                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isSimulationRunning ? 'bg-emerald-450' : 'bg-red-400'} opacity-75`}></span>
-                <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isSimulationRunning ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${
+                  isGenLayerConnected ? 'bg-emerald-400' : 'bg-amber-400'
+                } opacity-75`}></span>
+                <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                  isGenLayerConnected ? 'bg-emerald-500' : 'bg-amber-550'
+                }`}></span>
               </span>
               <div>
-                <p className="text-[11px] font-mono text-gray-500 uppercase tracking-wider font-semibold">Feed Streamer</p>
-                <p className="text-xs font-semibold text-main">
-                  {isSimulationRunning ? 'Listening Live' : 'Paused'}
+                <p className="text-[11px] font-mono text-gray-500 uppercase tracking-wider font-semibold">GenLayer Node</p>
+                <p className={`text-xs font-bold ${
+                  isGenLayerConnected ? 'text-emerald-600 dark:text-emerald-450' : 'text-amber-600 dark:text-amber-500'
+                }`}>
+                  {isGenLayerConnected ? 'On-Chain Connected' : 'Offline Simulation'}
                 </p>
               </div>
             </div>
-            <div className="text-[10px] font-mono font-bold text-white bg-purple-600 px-1.5 py-0.5 rounded border border-purple-500/20 shadow-sm">
-              GL-NET
+            <div 
+              title={isGenLayerConnected ? 'On-Chain execution active' : 'Offline mockup fallback mode active'}
+              className={`text-[9px] font-mono font-bold text-white px-1.5 py-0.5 rounded border shadow-sm ${
+                isGenLayerConnected ? 'bg-emerald-600 border-emerald-500/20' : 'bg-amber-650 border-amber-500/20'
+              }`}
+            >
+              {isGenLayerConnected ? 'ACTIVE' : 'SIMUL'}
             </div>
           </div>
         </div>

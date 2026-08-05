@@ -35,6 +35,7 @@ export function App() {
   const [reputation, setReputation] = useState(100);
   const [blockchainSignals, setBlockchainSignals] = useState([]);
   const [resolvingSignalId, setResolvingSignalId] = useState(null);
+  const [isGenLayerConnected, setIsGenLayerConnected] = useState(false);
 
   // Notification Modal State
   const [alertState, setAlertState] = useState({ isOpen: false, title: "", message: "" });
@@ -76,6 +77,7 @@ export function App() {
   const loadBlockchainData = useCallback(async (address) => {
     try {
       const count = await getSignalCountOnChain();
+      setIsGenLayerConnected(true);
       const loadedSignals = [];
       for (let i = 0; i < count; i++) {
         const sigData = await getSignalOnChain(i);
@@ -101,6 +103,7 @@ export function App() {
       }
     } catch (err) {
       console.warn("GenLayer node unreachable. Running in client-side consensus mode.");
+      setIsGenLayerConnected(false);
       // Fallback pre-populated predictions ledger for sandbox feel
       setBlockchainSignals(prev => {
         if (prev.length > 0) return prev;
@@ -486,6 +489,7 @@ export function App() {
         onConnectWallet={handleConnectWallet}
         theme={theme}
         onToggleTheme={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
+        isGenLayerConnected={isGenLayerConnected}
       />
 
       {/* Main View Container */}
