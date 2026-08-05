@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, SlidersHorizontal, AlertTriangle, Cpu, Coins, Layers, Eye, ShieldAlert, Database, HelpCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, SlidersHorizontal, AlertTriangle, Cpu, Coins, Layers, Eye, ShieldAlert, Database, HelpCircle, Lock, Clock } from 'lucide-react';
 
 export default function SignalScreener({ 
   tokens, 
@@ -13,6 +13,13 @@ export default function SignalScreener({
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [minProbability, setMinProbability] = useState(40);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  // Real-time timer tick for prediction window countdowns
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Filter tokens
   const filteredTokens = tokens.filter(token => {
@@ -231,17 +238,17 @@ export default function SignalScreener({
                   {/* GenLayer Register Signal Button */}
                   {canRegister && (
                     <button
-                      onClick={() => onRegisterSignal(token)}
+                      onClick={() => onRegisterSignal(token, 300000)}
                       disabled={!walletAddress}
                       className={`w-full py-2 rounded-xl text-[11px] font-extrabold uppercase border flex items-center justify-center gap-1.5 transition-all duration-200 ${
                         walletAddress
                           ? 'bg-purple-600 hover:bg-purple-700 text-white border-transparent shadow-md hover:scale-[1.01]'
                           : 'bg-neutral-100 dark:bg-neutral-900 text-neutral-400 dark:text-neutral-600 border-main cursor-not-allowed'
                       }`}
-                      title={!walletAddress ? "Connect GenLayer Wallet to register signals on-chain" : "Lock forecast on-chain"}
+                      title={!walletAddress ? "Connect GenLayer Wallet to register signals on-chain" : "Lock forecast on-chain (5-min prediction window)"}
                     >
                       <Database size={12} />
-                      {walletAddress ? "Lock forecast on GenLayer" : "Connect Wallet to Lock On-Chain"}
+                      {walletAddress ? "Lock Forecast (5m Window)" : "Connect Wallet to Lock On-Chain"}
                     </button>
                   )}
                 </div>
@@ -273,6 +280,7 @@ export default function SignalScreener({
                 <th className="py-3.5 px-6 text-right">Entry Price</th>
                 <th className="py-3.5 px-6 text-right">Target Price</th>
                 <th className="py-3.5 px-6 text-center">Status</th>
+                <th className="py-3.5 px-6 text-center">Prediction Window</th>
                 <th className="py-3.5 px-6">Consensus Verdict</th>
                 <th className="py-3.5 px-6 text-center">Action</th>
               </tr>
@@ -280,7 +288,7 @@ export default function SignalScreener({
             <tbody className="divide-y divide-main text-xs font-mono">
               {blockchainSignals.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="py-10 text-center text-gray-500 text-sm font-sans">
+                  <td colSpan="9" className="py-10 text-center text-gray-500 text-sm font-sans">
                     No predictions registered on-chain yet. Connect wallet and register high-probability signals above!
                   </td>
                 </tr>
@@ -288,6 +296,13 @@ export default function SignalScreener({
                 blockchainSignals.map((sig) => {
                   const isPending = sig.status === "pending";
                   const isSuccess = sig.status === "success";
+                  const windowDuration = sig.predictionWindow || 300000;
+                  const windowEnd = sig.timestamp + windowDuration;
+                  const isLocked = isPending && currentTime < windowEnd;
+                  const remainingSec = Math.max(0, Math.ceil((windowEnd - currentTime) / 1000));
+                  const mins = Math.floor(remainingSec / 60);
+                  const secs = (remainingSec % 60).toString().padStart(2, '0');
+
                   return (
                     <tr key={sig.id} className="hover:bg-neutral-100/10 dark:hover:bg-neutral-900/10">
                       <td className="py-4.5 px-6 text-gray-400">#{sig.id}</td>
@@ -308,23 +323,39 @@ export default function SignalScreener({
                           {sig.status}
                         </span>
                       </td>
+                      <td className="py-4.5 px-6 text-center">
+                        {isPending ? (
+                          isLocked ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/20 border border-amber-300 dark:border-amber-900/30">
+                              <Lock size={10} /> Locked ({mins}:{secs})
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/20 border border-emerald-300 dark:border-emerald-900/30">
+                              <Clock size={10} /> Window Expired
+                            </span>
+                          )
+                        ) : (
+                          <span className="text-gray-500 font-semibold text-[10px]">Completed</span>
+                        )}
+                      </td>
                       <td className="py-4.5 px-6 text-main font-sans max-w-xs truncate" title={sig.verdictReason}>
-                        {sig.verdictReason || "Awaiting target timeframe check..."}
+                        {sig.verdictReason || (isLocked ? `Window active (${mins}:${secs} remaining before resolution)` : "Ready for consensus resolution")}
                       </td>
                       <td className="py-4.5 px-6 text-center">
                         {isPending ? (
                           <button
                             onClick={() => onResolveSignal(sig.id)}
-                            disabled={!walletAddress || resolvingSignalId === sig.id}
+                            disabled={!walletAddress || resolvingSignalId === sig.id || isLocked}
+                            title={isLocked ? `Prediction window active. ${mins}:${secs} remaining.` : "Execute validator consensus"}
                             className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
-                              !walletAddress 
+                              !walletAddress || isLocked
                                 ? 'bg-neutral-100 dark:bg-neutral-900 text-neutral-400 dark:text-neutral-600 border-main cursor-not-allowed'
                                 : resolvingSignalId === sig.id
                                   ? 'bg-purple-100 dark:bg-purple-955/30 text-purple-750 dark:text-purple-400 border-purple-300 dark:border-purple-900/20 animate-pulse'
                                   : 'bg-purple-600 hover:bg-purple-700 text-white border-transparent shadow-sm'
                             }`}
                           >
-                            {resolvingSignalId === sig.id ? "Running Consensus..." : "Verify Target"}
+                            {resolvingSignalId === sig.id ? "Running Consensus..." : isLocked ? `Locked (${mins}:${secs})` : "Verify Target"}
                           </button>
                         ) : (
                           <span className="text-gray-500 font-bold">&mdash;</span>

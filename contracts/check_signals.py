@@ -4,9 +4,10 @@ CheckSignals — GenLayer Intelligent Contract
 
 Manages smart-money trading signals on-chain. When a high-probability trading
 alert is found by scanners, a trader submits the prediction to this contract.
-Once the timeline expires, validators call resolve_signal() which fetches live 
-price data from the DexScreener API and performs comparative LLM consensus to
-judge if the token hit its move target. Submitters earn reputation on-chain.
+Once the prediction window timeline expires, validators call resolve_signal()
+which fetches live price data from the DexScreener API and performs comparative
+LLM consensus to judge if the token hit its move target. Submitters earn
+reputation on-chain.
 """
 
 from genlayer import *
@@ -19,7 +20,8 @@ class SignalStatus:
     FAILED = "failed"
 
 
-class Signal(gl.dataclass):
+@record
+class Signal:
     submitter: Address
     symbol: str
     token_address: str
@@ -30,15 +32,20 @@ class Signal(gl.dataclass):
     status: str
     verdict_reason: str
     timestamp: u256
+    prediction_window: u256
 
 
 class CheckSignals(gl.Contract):
     signals: DynArray[Signal]
     next_id: u256
     reputation: Map[Address, u256]
+    min_prediction_window: u256
 
     def __init__(self):
+        self.signals = DynArray()
         self.next_id = u256(0)
+        self.reputation = Map()
+        self.min_prediction_window = u256(60000)  # Enforced min window 60,000ms (60s)
 
     # ------------------------------------------------------------------
     # Submit a high-probability signal to the GenLayer blockchain
@@ -52,8 +59,13 @@ class CheckSignals(gl.Contract):
         target_price: float,
         mcap: float,
         wallet_overlap: u256,
-        timestamp: u256
+        timestamp: u256,
+        prediction_window: u256 = u256(300000)  # Default 5 min window (300,000ms)
     ) -> u256:
+        window = prediction_window
+        if window < self.min_prediction_window:
+            window = self.min_prediction_window
+
         sig = Signal(
             submitter=gl.message.sender_address,
             symbol=symbol,
@@ -64,7 +76,8 @@ class CheckSignals(gl.Contract):
             wallet_overlap=wallet_overlap,
             status=SignalStatus.PENDING,
             verdict_reason="",
-            timestamp=timestamp
+            timestamp=gl.block.timestamp * 1000,
+            prediction_window=window
         )
         self.signals.append(sig)
         sig_id = self.next_id
@@ -80,9 +93,13 @@ class CheckSignals(gl.Contract):
     # Resolve the signal using live API data and multi-validator consensus
     # ------------------------------------------------------------------
     @gl.public.write
-    def resolve_signal(self, signal_id: u256) -> str:
+    def resolve_signal(self, signal_id: u256, current_timestamp: u256 = u256(0)) -> str:
         sig = self.signals[signal_id]
         assert sig.status == SignalStatus.PENDING, "Signal has already been resolved"
+
+        # Enforce prediction window lock using block timestamp to prevent immediate resolution & reputation farming
+        onchain_timestamp = gl.block.timestamp * 1000
+        assert onchain_timestamp >= sig.timestamp + sig.prediction_window, "Prediction window has not elapsed. Early resolution is blocked to prevent reputation farming."
 
         token_address = sig.token_address
         entry_price = sig.entry_price
@@ -178,3 +195,4 @@ The results must align on the meets_target verdict and the current price float p
         if rep is None:
             return u256(100)
         return rep
+

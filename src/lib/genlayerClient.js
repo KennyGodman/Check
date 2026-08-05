@@ -130,7 +130,7 @@ export async function getReputationOnChain(userAddress) {
 // ------------------------------------------------------------------
 // Contract Writes
 // ------------------------------------------------------------------
-export async function submitSignalOnChain(userAddress, { symbol, address, price, targetPrice, marketCap, smartHoldersCount }) {
+export async function submitSignalOnChain(userAddress, { symbol, address, price, targetPrice, marketCap, smartHoldersCount, predictionWindow = 300000 }) {
   try {
     const client = getWriteClient(userAddress);
     const txHash = await client.writeContract({
@@ -143,7 +143,8 @@ export async function submitSignalOnChain(userAddress, { symbol, address, price,
         parseFloat(targetPrice),
         parseFloat(marketCap),
         BigInt(smartHoldersCount),
-        BigInt(Date.now())
+        BigInt(Date.now()),
+        BigInt(predictionWindow)
       ]
     });
     return txHash;
@@ -159,7 +160,7 @@ export async function resolveSignalOnChain(userAddress, signalId) {
     const txHash = await client.writeContract({
       address: CONTRACT_ADDRESS,
       functionName: "resolve_signal",
-      args: [BigInt(signalId)]
+      args: [BigInt(signalId), BigInt(Date.now())]
     });
     return txHash;
   } catch (err) {

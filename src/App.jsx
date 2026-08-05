@@ -90,7 +90,8 @@ export function App() {
           walletOverlap: Number(sigData.wallet_overlap || sigData[6]),
           status: sigData.status || sigData[7],
           verdictReason: sigData.verdict_reason || sigData[8],
-          timestamp: Number(sigData.timestamp || sigData[9])
+          timestamp: Number(sigData.timestamp || sigData[9]),
+          predictionWindow: Number(sigData.prediction_window || sigData[10] || 300000)
         });
       }
       setBlockchainSignals(loadedSignals);
@@ -115,7 +116,8 @@ export function App() {
             walletOverlap: 2,
             status: "success",
             verdictReason: "DEX pool evaluation verified current price $0.0048 successfully hit target $0.0044.",
-            timestamp: Date.now() - 3600000
+            timestamp: Date.now() - 3600000,
+            predictionWindow: 300000
           },
           {
             id: 1,
@@ -128,7 +130,8 @@ export function App() {
             walletOverlap: 2,
             status: "pending",
             verdictReason: "",
-            timestamp: Date.now()
+            timestamp: Date.now() - 120000,
+            predictionWindow: 300000
           }
         ];
       });
@@ -156,7 +159,7 @@ export function App() {
   };
 
   // Submit prediction signal to GenLayer contract
-  const handleRegisterSignal = async (token) => {
+  const handleRegisterSignal = async (token, windowMs = 300000) => {
     if (!walletAddress) {
       triggerAlert("Wallet Connection Required", "Please connect your GenLayer wallet first.");
       return;
@@ -171,11 +174,12 @@ export function App() {
         price: token.price,
         targetPrice,
         marketCap: token.marketCap,
-        smartHoldersCount: token.smartHoldersCount
+        smartHoldersCount: token.smartHoldersCount,
+        predictionWindow: windowMs
       });
       console.log("GenLayer Transaction Hash:", tx);
       await loadBlockchainData(walletAddress);
-      triggerAlert("Signal Registered", `Signal for $${token.symbol} successfully registered on GenLayer! Tx Hash: ${tx.slice(0, 10)}...`);
+      triggerAlert("Signal Registered", `Signal for $${token.symbol} successfully registered on GenLayer with an enforced ${Math.round(windowMs / 60000)}-min prediction window! Tx Hash: ${tx.slice(0, 10)}...`);
     } catch (err) {
       console.warn("Smart contract write failed, creating local simulation prediction:", err.message);
       const newId = blockchainSignals.length;
@@ -190,16 +194,35 @@ export function App() {
         walletOverlap: token.smartHoldersCount,
         status: "pending",
         verdictReason: "",
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        predictionWindow: windowMs
       };
       setBlockchainSignals(prev => [...prev, newSig]);
-      triggerAlert("Signal Simulation Registered", `Signal for $${token.symbol} successfully registered in local simulation mode!`);
+      triggerAlert("Signal Simulation Registered", `Signal for $${token.symbol} registered with an enforced ${Math.round(windowMs / 60000)}-min prediction window lock!`);
     }
   };
 
   // Resolve prediction and execute multi-validator consensus
   const handleResolveSignal = async (signalId) => {
     if (!walletAddress) return;
+
+    // Enforce prediction window check before resolving
+    const sig = blockchainSignals.find(s => s.id === signalId);
+    if (sig) {
+      const windowEnd = sig.timestamp + (sig.predictionWindow || 300000);
+      const now = Date.now();
+      if (now < windowEnd) {
+        const remainingSec = Math.ceil((windowEnd - now) / 1000);
+        const mins = Math.floor(remainingSec / 60);
+        const secs = remainingSec % 60;
+        triggerAlert(
+          "Prediction Window Active",
+          `Cannot resolve signal #${signalId} yet. Enforced prediction window lock active to prevent reputation farming (${mins}m ${secs}s remaining).`
+        );
+        return;
+      }
+    }
+
     setResolvingSignalId(signalId);
 
     try {
