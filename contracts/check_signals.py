@@ -1,4 +1,4 @@
-# { "Depends": "py-genlayer:test" }
+# { "Depends": "py-genlayer:latest" }
 """
 CheckSignals — GenLayer Intelligent Contract
 
@@ -25,9 +25,9 @@ class Signal:
     submitter: Address
     symbol: str
     token_address: str
-    entry_price: float
-    target_price: float
-    mcap: float
+    entry_price: str
+    target_price: str
+    mcap: str
     wallet_overlap: u256
     status: str
     verdict_reason: str
@@ -38,13 +38,13 @@ class Signal:
 class CheckSignals(gl.Contract):
     signals: DynArray[Signal]
     next_id: u256
-    reputation: Map[Address, u256]
+    reputation: TreeMap[Address, u256]
     min_prediction_window: u256
 
     def __init__(self):
         self.signals = DynArray()
         self.next_id = u256(0)
-        self.reputation = Map()
+        self.reputation = TreeMap()
         self.min_prediction_window = u256(60000)  # Enforced min window 60,000ms (60s)
 
     # ------------------------------------------------------------------
@@ -55,9 +55,9 @@ class CheckSignals(gl.Contract):
         self,
         symbol: str,
         token_address: str,
-        entry_price: float,
-        target_price: float,
-        mcap: float,
+        entry_price: str,
+        target_price: str,
+        mcap: str,
         wallet_overlap: u256,
         timestamp: u256,
         prediction_window: u256 = u256(300000)  # Default 5 min window (300,000ms)
@@ -70,9 +70,9 @@ class CheckSignals(gl.Contract):
             submitter=gl.message.sender_address,
             symbol=symbol,
             token_address=token_address,
-            entry_price=entry_price,
-            target_price=target_price,
-            mcap=mcap,
+            entry_price=str(entry_price),
+            target_price=str(target_price),
+            mcap=str(mcap),
             wallet_overlap=wallet_overlap,
             status=SignalStatus.PENDING,
             verdict_reason="",
@@ -83,9 +83,8 @@ class CheckSignals(gl.Contract):
         sig_id = self.next_id
         self.next_id = u256(self.next_id + 1)
         
-        # Initialize reputation mapping if empty
-        if self.reputation[gl.message.sender_address] is None:
-            self.reputation[gl.message.sender_address] = u256(100) # base start reputation
+        if gl.message.sender_address not in self.reputation:
+            self.reputation[gl.message.sender_address] = u256(100)
             
         return sig_id
 
@@ -97,13 +96,12 @@ class CheckSignals(gl.Contract):
         sig = self.signals[signal_id]
         assert sig.status == SignalStatus.PENDING, "Signal has already been resolved"
 
-        # Enforce prediction window lock using block timestamp to prevent immediate resolution & reputation farming
         onchain_timestamp = gl.block.timestamp * 1000
         assert onchain_timestamp >= sig.timestamp + sig.prediction_window, "Prediction window has not elapsed. Early resolution is blocked to prevent reputation farming."
 
         token_address = sig.token_address
-        entry_price = sig.entry_price
-        target_price = sig.target_price
+        entry_price_str = sig.entry_price
+        target_price_str = sig.target_price
 
         def fetch_and_evaluate() -> str:
             url = f"https://api.dexscreener.com/latest/dex/tokens/{token_address}"
@@ -115,8 +113,8 @@ Verify if the token met its price target.
 
 TOKEN METRICS:
 - Address: {token_address}
-- Entry Price: {entry_price}
-- Target Price (Gain benchmark): {target_price}
+- Entry Price: {entry_price_str}
+- Target Price (Gain benchmark): {target_price_str}
 
 API SCAN DATA (Fetched live from DexScreener):
 ---
@@ -135,7 +133,6 @@ INSTRUCTIONS:
 }}
 """
             response = gl.nondet.exec_prompt(prompt)
-            # Safe JSON extraction
             cleaned = response.strip().strip("`").strip()
             if cleaned.lower().startswith("json"):
                 cleaned = cleaned[4:].strip()
@@ -146,7 +143,6 @@ INSTRUCTIONS:
                 "reason": str(parsed.get("reason", ""))[:500]
             })
 
-        # Run validators consensus using Equivalence Principle
         result_json = gl.eq_principle.prompt_comparative(
             fetch_and_evaluate,
             principle="""
@@ -160,17 +156,13 @@ The results must align on the meets_target verdict and the current price float p
 
         sig.verdict_reason = reason
         
-        # Get reputation values
-        current_rep = self.reputation[sig.submitter]
-        if current_rep is None:
-            current_rep = u256(100)
+        current_rep = self.reputation[sig.submitter] if sig.submitter in self.reputation else u256(100)
 
         if meets:
             sig.status = SignalStatus.SUCCESS
-            self.reputation[sig.submitter] = u256(current_rep + 15) # reward reputation
+            self.reputation[sig.submitter] = u256(current_rep + 15)
         else:
             sig.status = SignalStatus.FAILED
-            # Deduct points if prediction failed (to penalize false calls)
             if current_rep > 10:
                 self.reputation[sig.submitter] = u256(current_rep - 10)
             else:
@@ -191,8 +183,6 @@ The results must align on the meets_target verdict and the current price float p
 
     @gl.public.view
     def get_reputation(self, user: Address) -> u256:
-        rep = self.reputation[user]
-        if rep is None:
-            return u256(100)
-        return rep
-
+        if user in self.reputation:
+            return self.reputation[user]
+        return u256(100)

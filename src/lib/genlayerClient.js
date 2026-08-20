@@ -1,8 +1,8 @@
 import { createClient } from "genlayer-js";
 import { localnet, studionet } from "genlayer-js/chains";
 
-// Deployed contract address (mock placeholder or configurable via env)
-export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0x98a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9";
+// Deployed contract address on GenLayer Studionet
+export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0x9ea42D715f700D0FF0bd036023b4755C0dfe8989";
 
 // Network Selection
 const network = import.meta.env.VITE_NETWORK || "localnet";
