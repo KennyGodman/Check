@@ -11,6 +11,7 @@ reputation on-chain.
 """
 
 from genlayer import *
+from dataclasses import dataclass
 import json
 
 
@@ -20,7 +21,8 @@ class SignalStatus:
     FAILED = "failed"
 
 
-@record
+@allow_storage
+@dataclass
 class Signal:
     submitter: Address
     symbol: str

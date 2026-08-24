@@ -23,13 +23,16 @@ async function main() {
 
   const requiredPatterns = [
     { regex: /from\s+genlayer\s+import/, name: "GenLayer import ('from genlayer import *')" },
-    { regex: /@record/, name: "Runtime storage record decorator ('@record')" },
+    { regex: /from\s+dataclasses\s+import\s+dataclass/, name: "dataclass import ('from dataclasses import dataclass')" },
+    { regex: /@allow_storage/, name: "GenLayer storage decorator ('@allow_storage')" },
+    { regex: /@dataclass/, name: "Python dataclass decorator ('@dataclass')" },
     { regex: /class\s+Signal/, name: "Signal storage record class" },
     { regex: /class\s+CheckSignals\(\s*gl\.Contract\s*\)/, name: "CheckSignals contract class" },
     { regex: /signals\s*:\s*DynArray\[Signal\]/, name: "DynArray[Signal] state field" }
   ];
 
   const forbiddenPatterns = [
+    { regex: /@record/, name: "Undefined '@record' decorator" },
     { regex: /record\s*=\s*allow_storage/, name: "Legacy 'record = allow_storage' fallback" },
     { regex: /def\s+record\s*\(/, name: "Legacy 'def record' override" },
     { regex: /def\s+allow_storage\s*\(/, name: "Legacy 'def allow_storage' override" }

@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:contract": "node scripts/check_contract.js",
+    "lint:contract": "node scripts/check_contract.js",
+    "test": "npm run check:contract"
   },
   "dependencies": {
     "clsx": "^2.1.1",

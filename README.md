@@ -74,27 +74,43 @@ Built with **React**, **Vite**, and **TailwindCSS**:
 
 ---
 
+## 🧪 GenVM Contract Validation & Testing
+
+To run the automated validation suite and verify compliance with GenVM storage standards:
+
+```bash
+# Run the reproducible GenVM static analysis, storage decorator check, and deployment verification
+npm test
+# or
+npm run check:contract
+```
+
+### Direct GenLayer Deployment Verification
+```bash
+npx genlayer deploy --contract contracts/check_signals.py --rpc https://studio.genlayer.com/api
+```
+
+---
+
 ## ⛓️ Smart Contract Deployment
 
 To deploy the intelligent contract to your local GenLayer node or Studionet:
 
-1. Build or test the contract code using GenLayer tools:
+1. Test contract static storage structure & deployment:
    ```bash
-   # Make sure you have python-genlayer SDK installed
-   # Test contract locally
-   genlayer test contracts/check_signals.py
+   npm run check:contract
    ```
 
-2. Deploy the contract:
+2. Deploy the contract directly via GenLayer CLI:
    ```bash
-   genlayer deploy contracts/check_signals.py
+   npx genlayer deploy --contract contracts/check_signals.py --rpc https://studio.genlayer.com/api
    ```
 
 3. Copy the deployed contract address and set it in your environment variables:
    Create a `.env` file in the root directory:
    ```env
    VITE_CONTRACT_ADDRESS="your_deployed_contract_address_here"
-   VITE_NETWORK="localnet" # or "studionet"
+   VITE_NETWORK="studionet"
    ```
 
 ---
