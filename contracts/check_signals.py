@@ -6,7 +6,8 @@ Manages smart-money trading signals on-chain.
 Anti-Gaming Guarantees:
 1. Fixed Outcome Window: Signals are strictly bound to a prediction window and settlement deadline.
    Early resolution is blocked; arbitrarily late resolution defaults to terminal failure.
-2. Canonical Price Source: Each signal explicitly binds an immutable canonical price endpoint.
+2. Canonical Price Source Binding: Each signal explicitly binds an immutable canonical price endpoint,
+   enforcing strict validation across Host, Token, Chain, and Pair.
 3. Forced Terminal Results: Expired or unverified signals are force-resolved to FAILED,
    ensuring losing signals cannot sit in pending to evade reputation penalties.
 """
@@ -28,6 +29,8 @@ class Signal:
     submitter: Address
     symbol: str
     token_address: str
+    chain_id: str
+    pair_address: str
     price_source: str
     entry_price: str
     target_price: str
@@ -57,7 +60,7 @@ class CheckSignals(gl.Contract):
         self.default_grace_period = u256(300000)  # 5 min grace window for settlement (300,000ms)
 
     # ------------------------------------------------------------------
-    # Submit a high-probability signal bound to a fixed outcome window
+    # Submit a high-probability signal bound to canonical oracle & fixed outcome window
     # ------------------------------------------------------------------
     @gl.public.write
     def submit_signal(
@@ -70,23 +73,42 @@ class CheckSignals(gl.Contract):
         wallet_overlap: u256,
         timestamp: u256 = u256(0),
         prediction_window: u256 = u256(300000),  # Default 5 min window (300,000ms)
+        chain_id: str = "solana",
+        pair_address: str = "",
         price_source: str = ""
     ) -> u256:
+        assert len(token_address.strip()) > 0, "Token address cannot be empty"
+        assert len(symbol.strip()) > 0, "Symbol cannot be empty"
+        
+        target_chain = chain_id.strip().lower() if len(chain_id.strip()) > 0 else "solana"
+        target_pair = pair_address.strip()
+
+        # Strict Canonical URL Construction & Host Validation
+        # Prohibit arbitrary caller URLs: URL must strictly bind to api.dexscreener.com and the specific token/pair
+        if len(price_source.strip()) > 0:
+            provided_src = price_source.strip()
+            assert provided_src.startswith("https://api.dexscreener.com/"), "Invalid price source host: Must use canonical https://api.dexscreener.com/"
+            assert (token_address.lower() in provided_src.lower()) or (len(target_pair) > 0 and target_pair.lower() in provided_src.lower()), "Invalid price source path: Must bind to designated token address or pair address"
+            canonical_source = provided_src
+        else:
+            if len(target_pair) > 0:
+                canonical_source = f"https://api.dexscreener.com/latest/dex/pairs/{target_chain}/{target_pair}"
+            else:
+                canonical_source = f"https://api.dexscreener.com/latest/dex/tokens/{token_address.strip()}"
+
         window = prediction_window
         if window < self.min_prediction_window:
             window = self.min_prediction_window
 
         start_time = gl.block.timestamp * 1000
         deadline = start_time + window + self.default_grace_period
-        
-        canonical_source = price_source
-        if len(canonical_source) == 0:
-            canonical_source = f"https://api.dexscreener.com/latest/dex/tokens/{token_address}"
 
         sig = Signal(
             submitter=gl.message.sender_address,
-            symbol=symbol,
-            token_address=token_address,
+            symbol=symbol.strip().upper(),
+            token_address=token_address.strip(),
+            chain_id=target_chain,
+            pair_address=target_pair,
             price_source=canonical_source,
             entry_price=str(entry_price),
             target_price=str(target_price),
@@ -110,7 +132,7 @@ class CheckSignals(gl.Contract):
         return sig_id
 
     # ------------------------------------------------------------------
-    # Resolve signal using canonical price source & multi-validator consensus
+    # Resolve signal with strict 4-point canonical validation (Host, Token, Chain, Pair)
     # ------------------------------------------------------------------
     @gl.public.write
     def resolve_signal(self, signal_id: u256, current_timestamp: u256 = u256(0)) -> str:
@@ -136,8 +158,14 @@ class CheckSignals(gl.Contract):
                 
             return sig.status
 
+        # Validate Host before performing non-deterministic fetch
+        assert sig.price_source.startswith("https://api.dexscreener.com/"), "Invalid price source host: Must be canonical DexScreener API"
+
         # Within valid outcome evaluation window: query canonical price source
         token_address = sig.token_address
+        symbol = sig.symbol
+        chain_id = sig.chain_id
+        pair_address = sig.pair_address
         entry_price_str = sig.entry_price
         target_price_str = sig.target_price
         canonical_source = sig.price_source
@@ -146,29 +174,52 @@ class CheckSignals(gl.Contract):
             page_text = gl.nondet.web.render(canonical_source, mode="text")
 
             prompt = f"""
-You are resolving a cryptocurrency signal prediction recorded on the GenLayer blockchain.
-Verify if the token met its price target using the designated canonical price source.
+You are an impartial on-chain consensus validator resolving a cryptocurrency trading signal on the GenLayer blockchain.
+You must strictly validate the market data against the signal's 4 CANONICAL BINDING PARAMETERS: HOST, TOKEN, CHAIN, and PAIR.
 
-CANONICAL DATA SOURCE:
+CANONICAL BINDING PARAMETERS:
 - Source Endpoint: {canonical_source}
-- Token Address: {token_address}
-- Entry Benchmark Price: {entry_price_str}
-- Target Benchmark Price: {target_price_str}
+- Expected Host: api.dexscreener.com
+- Expected Symbol: {symbol}
+- Expected Token Address: {token_address}
+- Expected Chain ID: {chain_id}
+- Expected Pair Address: {pair_address if len(pair_address) > 0 else 'PRIMARY_LIQUIDITY_PAIR'}
+- Entry Benchmark Price: ${entry_price_str}
+- Target Benchmark Price: ${target_price_str}
 
 API SCAN DATA (Fetched live from Canonical DexScreener):
 ---
 {page_text}
 ---
 
-INSTRUCTIONS:
-1. Locate the canonical price in the API response (look for the "priceUsd" field for the primary pair).
-2. Compare the canonical price with the target price ({target_price_str}).
-3. If the canonical price is equal to or greater than the target price, "meets_target" is true. Otherwise false.
-4. Respond ONLY with a JSON object in this format (no markdown blocks, no commentary):
+STRICT 4-STEP VALIDATION INSTRUCTIONS:
+1. HOST VALIDATION:
+   - Confirm that the response is valid DexScreener market data containing a 'pairs' array.
+
+2. TOKEN VALIDATION:
+   - Inspect the 'pairs' array.
+   - Verify that there exists at least one pair where 'baseToken.address' (case-insensitive) matches '{token_address}' and/or 'baseToken.symbol' matches '{symbol}'.
+   - If no pair matches the expected token address, token validation FAILS.
+
+3. CHAIN VALIDATION:
+   - Verify that the matching pair's 'chainId' matches '{chain_id}' (e.g. solana, ethereum, base, bsc, etc.).
+   - If the pair is on a different chain, chain validation FAILS.
+
+4. PAIR VALIDATION & CANONICAL PRICE EXTRACTION:
+   - If an expected pair address '{pair_address}' is specified, match that exact pair. Otherwise, identify the primary pair on '{chain_id}' with the highest liquidity.
+   - Extract the canonical 'priceUsd' (as a floating-point number) from this verified pair.
+   - Compare the canonical price with the target price (${target_price_str}).
+   - If and only if all 4 checks (Host, Token, Chain, Pair) PASS and canonical_price >= {target_price_str}, then 'meets_target' is true. Otherwise false.
+
+Respond ONLY with a JSON object in this format (no markdown code blocks, no other text):
 {{
-  "current_price": <float value>,
+  "host_valid": true,
+  "token_matched": true,
+  "chain_matched": true,
+  "pair_matched": true,
+  "canonical_price": <float priceUsd or 0.0>,
   "meets_target": true or false,
-  "reason": "a brief description (e.g. price reached $0.125 exceeding target $0.114)"
+  "reason": "A concise summary describing host, token, chain, pair validation status, canonical price found, and target comparison"
 }}
 """
             response = gl.nondet.exec_prompt(prompt)
@@ -177,7 +228,11 @@ INSTRUCTIONS:
                 cleaned = cleaned[4:].strip()
             parsed = json.loads(cleaned)
             return json.dumps({
-                "current_price": float(parsed.get("current_price", 0.0)),
+                "host_valid": bool(parsed.get("host_valid", False)),
+                "token_matched": bool(parsed.get("token_matched", False)),
+                "chain_matched": bool(parsed.get("chain_matched", False)),
+                "pair_matched": bool(parsed.get("pair_matched", False)),
+                "canonical_price": float(parsed.get("canonical_price", 0.0)),
                 "meets_target": bool(parsed.get("meets_target", False)),
                 "reason": str(parsed.get("reason", ""))[:500]
             })
@@ -185,20 +240,33 @@ INSTRUCTIONS:
         result_json = gl.eq_principle.prompt_comparative(
             fetch_and_evaluate,
             principle="""
-The results must align on the meets_target verdict and the canonical price float parsed from the API text. Minor word differences in the reason field are permitted.
+The validator nodes must reach consensus on:
+1. host_valid (boolean)
+2. token_matched (boolean)
+3. chain_matched (boolean)
+4. pair_matched (boolean)
+5. canonical_price (float within 0.1% tolerance)
+6. meets_target (boolean)
+Minor wording differences in the reason summary are permitted.
 """
         )
 
         parsed = json.loads(result_json)
-        meets = parsed["meets_target"]
-        reason = parsed["reason"]
-        curr_price_str = str(parsed.get("current_price", 0.0))
+        host_valid = bool(parsed.get("host_valid", False))
+        token_matched = bool(parsed.get("token_matched", False))
+        chain_matched = bool(parsed.get("chain_matched", False))
+        pair_matched = bool(parsed.get("pair_matched", False))
+        meets = bool(parsed.get("meets_target", False))
+        reason = str(parsed.get("reason", ""))
+        curr_price_str = str(parsed.get("canonical_price", 0.0))
+
+        all_valid = host_valid and token_matched and chain_matched and pair_matched
 
         sig.verdict_reason = reason
         sig.resolved_at = onchain_timestamp
         sig.resolved_price = curr_price_str
 
-        if meets:
+        if all_valid and meets:
             sig.status = SignalStatus.SUCCESS
             self.reputation[sig.submitter] = u256(current_rep + 15)
         else:

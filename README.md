@@ -15,9 +15,13 @@ Check enforces cryptographic and game-theoretic guarantees to prevent reputation
    - **Early Resolution Blocked**: Attempting to resolve a signal before the prediction window has completed is rejected by the smart contract to prevent premature reputation farming.
    - **No Arbitrarily Late Spot Price Gaming**: If a signal is resolved after its `settlement_deadline` has passed, it is strictly classified as an **expired/unverified signal** and forced to **`FAILED`** with a reputation penalty (`-10 REP`). Traders cannot wait weeks for a token to pump and cherry-pick resolution on an expired short-term forecast.
 
-2. **Canonical Price Source Binding**:
-   - Every signal explicitly binds an immutable canonical price source endpoint on-chain (`price_source`, e.g. `https://api.dexscreener.com/latest/dex/tokens/{token_address}`).
-   - GenLayer validators are strictly bound to query and parse this canonical source and enforce equivalence principle consensus on the token price during the outcome window.
+2. **Canonical Price Source Binding & 4-Point Oracle Validation**:
+   - **No Arbitrary Caller URLs**: `submit_signal` rejects arbitrary URLs. The canonical endpoint is strictly bound and constructed against the trusted host `https://api.dexscreener.com/` and the target token, chain, and pair.
+   - **Host Validation**: Asserts that resolution only executes against `https://api.dexscreener.com/`.
+   - **Token Validation**: Asserts that `baseToken.address` and `baseToken.symbol` in the returned pairs match the registered token on-chain.
+   - **Chain Validation**: Asserts that `chainId` of the pair matches the registered blockchain network (`solana`, `ethereum`, `base`, etc.).
+   - **Pair Validation**: Binds the explicit `pair_address` or extracts priceUsd from the primary verified high-liquidity pool, preventing spoofed low-liquidity pairs or cross-chain price manipulation.
+   - **Equivalence Principle Consensus**: Multi-validator consensus on all 4 validation flags (`host_valid`, `token_matched`, `chain_matched`, `pair_matched`), `canonical_price`, and `meets_target`. Failure of any dimension automatically results in terminal `FAILED`.
 
 3. **Guaranteed Terminal Results & Permissionless Keeper Sweeper**:
    - **Permissionless Settlement**: ANY wallet, keeper, or validator can call `resolve_signal` or `force_resolve_expired` once the prediction window has passed.

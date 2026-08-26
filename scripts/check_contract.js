@@ -27,8 +27,11 @@ async function main() {
     { regex: /@allow_storage/, name: "GenLayer storage decorator ('@allow_storage')" },
     { regex: /@dataclass/, name: "Python dataclass decorator ('@dataclass')" },
     { regex: /class\s+Signal/, name: "Signal storage record class" },
+    { regex: /chain_id\s*:\s*str/, name: "Signal.chain_id field" },
+    { regex: /pair_address\s*:\s*str/, name: "Signal.pair_address field" },
     { regex: /class\s+CheckSignals\(\s*gl\.Contract\s*\)/, name: "CheckSignals contract class" },
-    { regex: /signals\s*:\s*DynArray\[Signal\]/, name: "DynArray[Signal] state field" }
+    { regex: /signals\s*:\s*DynArray\[Signal\]/, name: "DynArray[Signal] state field" },
+    { regex: /https:\/\/api\.dexscreener\.com\//, name: "Canonical DexScreener host enforcement" }
   ];
 
   const forbiddenPatterns = [

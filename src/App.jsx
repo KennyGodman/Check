@@ -82,27 +82,29 @@ export function App() {
       const loadedSignals = [];
       for (let i = 0; i < count; i++) {
         const sigData = await getSignalOnChain(i);
-        const win = Number(sigData.prediction_window || sigData[11] || 300000);
-        const start = Number(sigData.timestamp || sigData[10] || Date.now());
-        const deadline = Number(sigData.settlement_deadline || sigData[12] || (start + win + 300000));
+        const win = Number(sigData.prediction_window || sigData[13] || 300000);
+        const start = Number(sigData.timestamp || sigData[12] || Date.now());
+        const deadline = Number(sigData.settlement_deadline || sigData[14] || (start + win + 300000));
         
         loadedSignals.push({
           id: i,
           submitter: sigData.submitter || sigData[0],
           symbol: sigData.symbol || sigData[1],
           tokenAddress: sigData.token_address || sigData[2],
-          priceSource: sigData.price_source || sigData[3] || `https://api.dexscreener.com/latest/dex/tokens/${sigData.token_address || sigData[2]}`,
-          entryPrice: Number(sigData.entry_price || sigData[4]),
-          targetPrice: Number(sigData.target_price || sigData[5]),
-          mcap: Number(sigData.mcap || sigData[6]),
-          walletOverlap: Number(sigData.wallet_overlap || sigData[7]),
-          status: sigData.status || sigData[8],
-          verdictReason: sigData.verdict_reason || sigData[9],
+          chainId: sigData.chain_id || sigData[3] || "solana",
+          pairAddress: sigData.pair_address || sigData[4] || "",
+          priceSource: sigData.price_source || sigData[5] || `https://api.dexscreener.com/latest/dex/tokens/${sigData.token_address || sigData[2]}`,
+          entryPrice: Number(sigData.entry_price || sigData[6]),
+          targetPrice: Number(sigData.target_price || sigData[7]),
+          mcap: Number(sigData.mcap || sigData[8]),
+          walletOverlap: Number(sigData.wallet_overlap || sigData[9]),
+          status: sigData.status || sigData[10],
+          verdictReason: sigData.verdict_reason || sigData[11],
           timestamp: start,
           predictionWindow: win,
           settlementDeadline: deadline,
-          resolvedAt: Number(sigData.resolved_at || sigData[13] || 0),
-          resolvedPrice: String(sigData.resolved_price || sigData[14] || "0.0")
+          resolvedAt: Number(sigData.resolved_at || sigData[15] || 0),
+          resolvedPrice: String(sigData.resolved_price || sigData[16] || "0.0")
         });
       }
       setBlockchainSignals(loadedSignals);
@@ -123,13 +125,15 @@ export function App() {
             submitter: address || "0x7a8f09b11a91cf278d91a27e3d2c67da12ab9d31",
             symbol: "KRONOS",
             tokenAddress: "KrOnOS7xT2yR9PqM5s8KzN5vH4eQ1w8J3d7fA6b2C",
+            chainId: "solana",
+            pairAddress: "4mKrOnOS7xT2yR9PqM5s8KzN5vH4eQ1w8J3d7fA6b2C",
             priceSource: "https://api.dexscreener.com/latest/dex/tokens/KrOnOS7xT2yR9PqM5s8KzN5vH4eQ1w8J3d7fA6b2C",
             entryPrice: 0.0037,
             targetPrice: 0.0044,
             mcap: 4120000,
             walletOverlap: 2,
             status: "success",
-            verdictReason: "Canonical DexScreener consensus verified price $0.0048 successfully hit target $0.0044 within outcome window.",
+            verdictReason: "Canonical DexScreener consensus [Host: VALID, Token: VALID, Chain: SOLANA, Pair: PRIMARY] verified price $0.0048 hit target $0.0044.",
             timestamp: now - 3600000,
             predictionWindow: 300000,
             settlementDeadline: now - 3300000,
@@ -141,6 +145,8 @@ export function App() {
             submitter: address || "0x7a8f09b11a91cf278d91a27e3d2c67da12ab9d31",
             symbol: "NEXUS",
             tokenAddress: "7xxNExuS2pQ5zM1jS3hP6r2eT9u4fB5c8nK6q2vXW",
+            chainId: "solana",
+            pairAddress: "8xNw9pQ5zM1jS3hP6r2eT9u4fB5c8nK6q2vXWz3yNed",
             priceSource: "https://api.dexscreener.com/latest/dex/tokens/7xxNExuS2pQ5zM1jS3hP6r2eT9u4fB5c8nK6q2vXW",
             entryPrice: 0.095,
             targetPrice: 0.114,
@@ -159,6 +165,8 @@ export function App() {
             submitter: "0x3d94cf128a89ef23910c2837f41a890123ef6789",
             symbol: "AEGIS",
             tokenAddress: "AeGis99p2Q1xL8kJ4m7Nv3sW5tF6hY8cR2bE4vX0z",
+            chainId: "solana",
+            pairAddress: "6rAeGis99p2Q1xL8kJ4m7Nv3sW5tF6hY8cR2bE4vX0z",
             priceSource: "https://api.dexscreener.com/latest/dex/tokens/AeGis99p2Q1xL8kJ4m7Nv3sW5tF6hY8cR2bE4vX0z",
             entryPrice: 0.012,
             targetPrice: 0.0144,
@@ -204,7 +212,11 @@ export function App() {
     }
 
     const targetPrice = token.price * 1.20; // 20% gain target
-    const canonicalSource = `https://api.dexscreener.com/latest/dex/tokens/${token.address}`;
+    const chainId = token.chainId || "solana";
+    const pairAddress = token.pairAddress || "";
+    const canonicalSource = pairAddress
+      ? `https://api.dexscreener.com/latest/dex/pairs/${chainId}/${pairAddress}`
+      : `https://api.dexscreener.com/latest/dex/tokens/${token.address}`;
 
     try {
       const tx = await submitSignalOnChain(walletAddress, {
@@ -215,13 +227,15 @@ export function App() {
         marketCap: token.marketCap,
         smartHoldersCount: token.smartHoldersCount,
         predictionWindow: windowMs,
+        chainId,
+        pairAddress,
         priceSource: canonicalSource
       });
       console.log("GenLayer Transaction Hash:", tx);
       await loadBlockchainData(walletAddress);
       triggerAlert(
         "Signal Registered On-Chain", 
-        `Signal for $${token.symbol} bound to DexScreener canonical oracle and an immutable ${Math.round(windowMs / 60000)}-min outcome window! Tx: ${tx.slice(0, 10)}...`
+        `Signal for $${token.symbol} (${chainId.toUpperCase()}) bound to canonical DexScreener oracle with an immutable ${Math.round(windowMs / 60000)}-min outcome window! Tx: ${tx.slice(0, 10)}...`
       );
     } catch (err) {
       console.warn("Contract write fallback, creating local simulation prediction:", err.message);
@@ -232,6 +246,8 @@ export function App() {
         submitter: walletAddress,
         symbol: token.symbol,
         tokenAddress: token.address,
+        chainId,
+        pairAddress,
         priceSource: canonicalSource,
         entryPrice: token.price,
         targetPrice,
@@ -248,7 +264,7 @@ export function App() {
       setBlockchainSignals(prev => [...prev, newSig]);
       triggerAlert(
         "Signal Registered (Simulated)", 
-        `Signal for $${token.symbol} locked with ${Math.round(windowMs / 60000)}m outcome window & canonical DexScreener binding!`
+        `Signal for $${token.symbol} locked with ${Math.round(windowMs / 60000)}m outcome window & canonical DexScreener [${chainId.toUpperCase()}] binding!`
       );
     }
   };
@@ -310,9 +326,9 @@ export function App() {
                 status: hitTarget ? "success" : "failed",
                 resolvedAt: Date.now(),
                 resolvedPrice: currentPrice.toString(),
-                verdictReason: `Canonical DexScreener consensus completed. Measured price $${currentPrice.toLocaleString(undefined, { maximumSignificantDigits: 6 })} ${
-                  hitTarget ? 'successfully met target' : 'failed to meet target'
-                } $${s.targetPrice.toLocaleString(undefined, { maximumSignificantDigits: 6 })} within designated outcome window.`
+                verdictReason: `Canonical DexScreener consensus [Host: VALID, Token: VALID, Chain: ${(s.chainId || 'solana').toUpperCase()}, Pair: VALID]. Price $${currentPrice.toLocaleString(undefined, { maximumSignificantDigits: 6 })} ${
+                  hitTarget ? 'met target' : 'did not reach target'
+                } $${s.targetPrice.toLocaleString(undefined, { maximumSignificantDigits: 6 })} within outcome window.`
               };
             }
             return s;

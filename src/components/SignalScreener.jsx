@@ -255,9 +255,9 @@ export default function SignalScreener({
                 {/* Canonical source tag & trend line */}
                 <div className="mt-3 pt-3 border-t border-main space-y-2.5">
                   <div className="flex justify-between items-center text-[10px] text-gray-500 font-mono">
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1" title={`Canonical Price Binding: DexScreener | Chain: ${token.chainId || 'solana'} | Pair: ${token.pairAddress || 'Primary'}`}>
                       <ShieldCheck size={11} className="text-purple-500" />
-                      Canonical: DexScreener
+                      Canonical: DexScreener ({token.chainId ? token.chainId.toUpperCase() : 'SOL'})
                     </span>
                     <div>
                       {renderSparkline(token.sparkline, token.change24h)}
@@ -387,12 +387,18 @@ export default function SignalScreener({
                       
                       {/* Canonical Source */}
                       <td className="py-4 px-5">
-                        <span 
-                          className="inline-flex items-center gap-1 text-[10px] text-gray-500 bg-neutral-100 dark:bg-neutral-900 border border-main px-2 py-0.5 rounded max-w-[140px] truncate"
-                          title={sig.priceSource || `https://api.dexscreener.com/latest/dex/tokens/${sig.tokenAddress}`}
+                        <div 
+                          className="inline-flex flex-col gap-0.5 text-[10px] text-gray-500 bg-neutral-100 dark:bg-neutral-900 border border-main px-2 py-1 rounded max-w-[170px]"
+                          title={`Canonical Binding:\n- Host: api.dexscreener.com\n- Chain: ${sig.chainId || 'solana'}\n- Token: ${sig.tokenAddress}\n- Pair: ${sig.pairAddress || 'Primary Pool'}\n- Endpoint: ${sig.priceSource || `https://api.dexscreener.com/latest/dex/tokens/${sig.tokenAddress}`}`}
                         >
-                          DexScreener API
-                        </span>
+                          <span className="font-semibold text-main flex items-center gap-1">
+                            <ShieldCheck size={10} className="text-purple-500 shrink-0" />
+                            DexScreener ({sig.chainId ? sig.chainId.toUpperCase() : 'SOL'})
+                          </span>
+                          <span className="text-[9px] text-gray-400 font-mono truncate">
+                            {sig.pairAddress ? `Pair: ${sig.pairAddress.slice(0, 6)}...` : 'Primary Pool'}
+                          </span>
+                        </div>
                       </td>
 
                       <td className="py-4 px-5 text-right font-medium">

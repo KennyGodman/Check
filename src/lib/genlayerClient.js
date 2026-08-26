@@ -138,6 +138,8 @@ export async function submitSignalOnChain(userAddress, {
   marketCap, 
   smartHoldersCount, 
   predictionWindow = 300000,
+  chainId = "solana",
+  pairAddress = "",
   priceSource = ""
 }) {
   try {
@@ -154,7 +156,9 @@ export async function submitSignalOnChain(userAddress, {
         BigInt(smartHoldersCount),
         BigInt(Date.now()),
         BigInt(predictionWindow),
-        priceSource || `https://api.dexscreener.com/latest/dex/tokens/${address}`
+        chainId || "solana",
+        pairAddress || "",
+        priceSource || ""
       ]
     });
     return txHash;
