@@ -2,7 +2,7 @@ import { createClient } from "genlayer-js";
 import { localnet, studionet } from "genlayer-js/chains";
 
 // Deployed contract address on GenLayer Studionet
-export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0x9ea42D715f700D0FF0bd036023b4755C0dfe8989";
+export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0x49D1aB5868d92AF4AA3b07787479d0dD36d86088";
 
 // Network Selection
 const network = import.meta.env.VITE_NETWORK || "localnet";
@@ -130,7 +130,16 @@ export async function getReputationOnChain(userAddress) {
 // ------------------------------------------------------------------
 // Contract Writes
 // ------------------------------------------------------------------
-export async function submitSignalOnChain(userAddress, { symbol, address, price, targetPrice, marketCap, smartHoldersCount, predictionWindow = 300000 }) {
+export async function submitSignalOnChain(userAddress, { 
+  symbol, 
+  address, 
+  price, 
+  targetPrice, 
+  marketCap, 
+  smartHoldersCount, 
+  predictionWindow = 300000,
+  priceSource = ""
+}) {
   try {
     const client = getWriteClient(userAddress);
     const txHash = await client.writeContract({
@@ -139,12 +148,13 @@ export async function submitSignalOnChain(userAddress, { symbol, address, price,
       args: [
         symbol,
         address,
-        parseFloat(price),
-        parseFloat(targetPrice),
-        parseFloat(marketCap),
+        parseFloat(price).toString(),
+        parseFloat(targetPrice).toString(),
+        parseFloat(marketCap).toString(),
         BigInt(smartHoldersCount),
         BigInt(Date.now()),
-        BigInt(predictionWindow)
+        BigInt(predictionWindow),
+        priceSource || `https://api.dexscreener.com/latest/dex/tokens/${address}`
       ]
     });
     return txHash;
@@ -165,6 +175,21 @@ export async function resolveSignalOnChain(userAddress, signalId) {
     return txHash;
   } catch (err) {
     console.error("GenLayer write error (resolve_signal):", err.message);
+    throw err;
+  }
+}
+
+export async function forceResolveExpiredOnChain(userAddress, signalId) {
+  try {
+    const client = getWriteClient(userAddress);
+    const txHash = await client.writeContract({
+      address: CONTRACT_ADDRESS,
+      functionName: "force_resolve_expired",
+      args: [BigInt(signalId)]
+    });
+    return txHash;
+  } catch (err) {
+    console.error("GenLayer write error (force_resolve_expired):", err.message);
     throw err;
   }
 }

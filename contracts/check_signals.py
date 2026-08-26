@@ -2,12 +2,13 @@
 """
 CheckSignals — GenLayer Intelligent Contract
 
-Manages smart-money trading signals on-chain. When a high-probability trading
-alert is found by scanners, a trader submits the prediction to this contract.
-Once the prediction window timeline expires, validators call resolve_signal()
-which fetches live price data from the DexScreener API and performs comparative
-LLM consensus to judge if the token hit its move target. Submitters earn
-reputation on-chain.
+Manages smart-money trading signals on-chain.
+Anti-Gaming Guarantees:
+1. Fixed Outcome Window: Signals are strictly bound to a prediction window and settlement deadline.
+   Early resolution is blocked; arbitrarily late resolution defaults to terminal failure.
+2. Canonical Price Source: Each signal explicitly binds an immutable canonical price endpoint.
+3. Forced Terminal Results: Expired or unverified signals are force-resolved to FAILED,
+   ensuring losing signals cannot sit in pending to evade reputation penalties.
 """
 
 from genlayer import *
@@ -27,6 +28,7 @@ class Signal:
     submitter: Address
     symbol: str
     token_address: str
+    price_source: str
     entry_price: str
     target_price: str
     mcap: str
@@ -35,6 +37,9 @@ class Signal:
     verdict_reason: str
     timestamp: u256
     prediction_window: u256
+    settlement_deadline: u256
+    resolved_at: u256
+    resolved_price: str
 
 
 class CheckSignals(gl.Contract):
@@ -42,15 +47,17 @@ class CheckSignals(gl.Contract):
     next_id: u256
     reputation: TreeMap[Address, u256]
     min_prediction_window: u256
+    default_grace_period: u256
 
     def __init__(self):
         self.signals = DynArray()
         self.next_id = u256(0)
         self.reputation = TreeMap()
-        self.min_prediction_window = u256(60000)  # Enforced min window 60,000ms (60s)
+        self.min_prediction_window = u256(60000)  # Enforced min window 60s (60,000ms)
+        self.default_grace_period = u256(300000)  # 5 min grace window for settlement (300,000ms)
 
     # ------------------------------------------------------------------
-    # Submit a high-probability signal to the GenLayer blockchain
+    # Submit a high-probability signal bound to a fixed outcome window
     # ------------------------------------------------------------------
     @gl.public.write
     def submit_signal(
@@ -61,25 +68,37 @@ class CheckSignals(gl.Contract):
         target_price: str,
         mcap: str,
         wallet_overlap: u256,
-        timestamp: u256,
-        prediction_window: u256 = u256(300000)  # Default 5 min window (300,000ms)
+        timestamp: u256 = u256(0),
+        prediction_window: u256 = u256(300000),  # Default 5 min window (300,000ms)
+        price_source: str = ""
     ) -> u256:
         window = prediction_window
         if window < self.min_prediction_window:
             window = self.min_prediction_window
 
+        start_time = gl.block.timestamp * 1000
+        deadline = start_time + window + self.default_grace_period
+        
+        canonical_source = price_source
+        if len(canonical_source) == 0:
+            canonical_source = f"https://api.dexscreener.com/latest/dex/tokens/{token_address}"
+
         sig = Signal(
             submitter=gl.message.sender_address,
             symbol=symbol,
             token_address=token_address,
+            price_source=canonical_source,
             entry_price=str(entry_price),
             target_price=str(target_price),
             mcap=str(mcap),
             wallet_overlap=wallet_overlap,
             status=SignalStatus.PENDING,
             verdict_reason="",
-            timestamp=gl.block.timestamp * 1000,
-            prediction_window=window
+            timestamp=start_time,
+            prediction_window=window,
+            settlement_deadline=deadline,
+            resolved_at=u256(0),
+            resolved_price="0.0"
         )
         self.signals.append(sig)
         sig_id = self.next_id
@@ -91,43 +110,61 @@ class CheckSignals(gl.Contract):
         return sig_id
 
     # ------------------------------------------------------------------
-    # Resolve the signal using live API data and multi-validator consensus
+    # Resolve signal using canonical price source & multi-validator consensus
     # ------------------------------------------------------------------
     @gl.public.write
     def resolve_signal(self, signal_id: u256, current_timestamp: u256 = u256(0)) -> str:
         sig = self.signals[signal_id]
-        assert sig.status == SignalStatus.PENDING, "Signal has already been resolved"
+        assert sig.status == SignalStatus.PENDING, "Signal has already reached a terminal state"
 
         onchain_timestamp = gl.block.timestamp * 1000
         assert onchain_timestamp >= sig.timestamp + sig.prediction_window, "Prediction window has not elapsed. Early resolution is blocked to prevent reputation farming."
 
+        current_rep = self.reputation[sig.submitter] if sig.submitter in self.reputation else u256(100)
+
+        # Anti-Gaming Rule: If settlement deadline has passed, signal is expired and forced to terminal failure
+        if onchain_timestamp > sig.settlement_deadline:
+            sig.status = SignalStatus.FAILED
+            sig.resolved_at = onchain_timestamp
+            sig.resolved_price = "0.0"
+            sig.verdict_reason = "Settlement deadline exceeded. Signal expired without timely target verification - forced terminal failure."
+            
+            if current_rep > 10:
+                self.reputation[sig.submitter] = u256(current_rep - 10)
+            else:
+                self.reputation[sig.submitter] = u256(0)
+                
+            return sig.status
+
+        # Within valid outcome evaluation window: query canonical price source
         token_address = sig.token_address
         entry_price_str = sig.entry_price
         target_price_str = sig.target_price
+        canonical_source = sig.price_source
 
         def fetch_and_evaluate() -> str:
-            url = f"https://api.dexscreener.com/latest/dex/tokens/{token_address}"
-            page_text = gl.nondet.web.render(url, mode="text")
+            page_text = gl.nondet.web.render(canonical_source, mode="text")
 
             prompt = f"""
-You are resolving a cryptocurrency signal prediction recorded on a GenLayer blockchain.
-Verify if the token met its price target.
+You are resolving a cryptocurrency signal prediction recorded on the GenLayer blockchain.
+Verify if the token met its price target using the designated canonical price source.
 
-TOKEN METRICS:
-- Address: {token_address}
-- Entry Price: {entry_price_str}
-- Target Price (Gain benchmark): {target_price_str}
+CANONICAL DATA SOURCE:
+- Source Endpoint: {canonical_source}
+- Token Address: {token_address}
+- Entry Benchmark Price: {entry_price_str}
+- Target Benchmark Price: {target_price_str}
 
-API SCAN DATA (Fetched live from DexScreener):
+API SCAN DATA (Fetched live from Canonical DexScreener):
 ---
 {page_text}
 ---
 
 INSTRUCTIONS:
-1. Locate the current price in the API response (look for the "priceUsd" string, which is the current price).
-2. Compare the current price with the target price.
-3. If current price is equal to or greater than the target price, "meets_target" is true. Otherwise it is false.
-4. Respond ONLY with a JSON object in this format (no other conversational text, no markdown block wrappers):
+1. Locate the canonical price in the API response (look for the "priceUsd" field for the primary pair).
+2. Compare the canonical price with the target price ({target_price_str}).
+3. If the canonical price is equal to or greater than the target price, "meets_target" is true. Otherwise false.
+4. Respond ONLY with a JSON object in this format (no markdown blocks, no commentary):
 {{
   "current_price": <float value>,
   "meets_target": true or false,
@@ -148,17 +185,18 @@ INSTRUCTIONS:
         result_json = gl.eq_principle.prompt_comparative(
             fetch_and_evaluate,
             principle="""
-The results must align on the meets_target verdict and the current price float parsed from the API text. Word differences in the reason field are fine as long as the truth evaluation is the same.
+The results must align on the meets_target verdict and the canonical price float parsed from the API text. Minor word differences in the reason field are permitted.
 """
         )
 
         parsed = json.loads(result_json)
         meets = parsed["meets_target"]
         reason = parsed["reason"]
+        curr_price_str = str(parsed.get("current_price", 0.0))
 
         sig.verdict_reason = reason
-        
-        current_rep = self.reputation[sig.submitter] if sig.submitter in self.reputation else u256(100)
+        sig.resolved_at = onchain_timestamp
+        sig.resolved_price = curr_price_str
 
         if meets:
             sig.status = SignalStatus.SUCCESS
@@ -169,6 +207,31 @@ The results must align on the meets_target verdict and the current price float p
                 self.reputation[sig.submitter] = u256(current_rep - 10)
             else:
                 self.reputation[sig.submitter] = u256(0)
+
+        return sig.status
+
+    # ------------------------------------------------------------------
+    # Force resolve expired signals (Permissionless Crank / Sweeper)
+    # ------------------------------------------------------------------
+    @gl.public.write
+    def force_resolve_expired(self, signal_id: u256) -> str:
+        sig = self.signals[signal_id]
+        assert sig.status == SignalStatus.PENDING, "Signal has already reached a terminal state"
+
+        onchain_timestamp = gl.block.timestamp * 1000
+        assert onchain_timestamp > sig.settlement_deadline, "Signal has not exceeded its settlement deadline yet"
+
+        current_rep = self.reputation[sig.submitter] if sig.submitter in self.reputation else u256(100)
+
+        sig.status = SignalStatus.FAILED
+        sig.resolved_at = onchain_timestamp
+        sig.resolved_price = "0.0"
+        sig.verdict_reason = "Forced terminal failure: Abandoned/unresolved signal expired past settlement deadline."
+
+        if current_rep > 10:
+            self.reputation[sig.submitter] = u256(current_rep - 10)
+        else:
+            self.reputation[sig.submitter] = u256(0)
 
         return sig.status
 

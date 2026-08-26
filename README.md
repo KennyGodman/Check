@@ -1,8 +1,28 @@
 # 🔍 Check — On-Chain Trading Signal Accountability & Reputation Tracker
 
-Check is a decentralized dashboard and intelligence platform that tracks smart-money activity, calculates signal accuracy, and records trader reputation on-chain using **GenLayer Intelligent Contracts**.
+Check is a decentralized intelligence and reputation platform that tracks smart-money activity, calculates signal accuracy, and records trader reputation on-chain using **GenLayer Intelligent Contracts**.
 
-By combining real-time on-chain simulation, natural language processing, and decentralized web consensus, Check makes crypto-trading signals fully accountable and verifiable.
+By combining real-time on-chain verification, natural language processing, and decentralized web consensus, Check makes crypto-trading signals fully accountable and ungameable.
+
+---
+
+## 🛡️ Anti-Gaming & Strict Accountability Architecture
+
+Check enforces cryptographic and game-theoretic guarantees to prevent reputation gaming:
+
+1. **Fixed Outcome Window**:
+   - Each signal binds to an immutable `timestamp`, `prediction_window` (e.g. 5 minutes), and a `settlement_deadline` (`timestamp + window + grace_period`).
+   - **Early Resolution Blocked**: Attempting to resolve a signal before the prediction window has completed is rejected by the smart contract to prevent premature reputation farming.
+   - **No Arbitrarily Late Spot Price Gaming**: If a signal is resolved after its `settlement_deadline` has passed, it is strictly classified as an **expired/unverified signal** and forced to **`FAILED`** with a reputation penalty (`-10 REP`). Traders cannot wait weeks for a token to pump and cherry-pick resolution on an expired short-term forecast.
+
+2. **Canonical Price Source Binding**:
+   - Every signal explicitly binds an immutable canonical price source endpoint on-chain (`price_source`, e.g. `https://api.dexscreener.com/latest/dex/tokens/{token_address}`).
+   - GenLayer validators are strictly bound to query and parse this canonical source and enforce equivalence principle consensus on the token price during the outcome window.
+
+3. **Guaranteed Terminal Results & Permissionless Keeper Sweeper**:
+   - **Permissionless Settlement**: ANY wallet, keeper, or validator can call `resolve_signal` or `force_resolve_expired` once the prediction window has passed.
+   - **No Lingering Pending Signals**: Abandoned or losing signals cannot sit in `pending` to avoid reputation deductions.
+   - **Sweeper Crank**: Includes single and batch force-resolution functions (`force_resolve_expired`, `onSweepExpiredSignals`) so keepers can sweep all expired pending signals to terminal failure with one click.
 
 ---
 
@@ -10,9 +30,9 @@ By combining real-time on-chain simulation, natural language processing, and dec
 
 - **📊 Real-time Inflow Monitor**: Track wallet swaps, liquidity inflows, and smart-money token overlap ratios.
 - **🎯 Signal Screener**: Identify high-probability trading signals based on wallet cluster overlaps.
-- **🤖 On-Chain Signal Submission**: Connect your GenLayer wallet to log signal targets (symbol, entry price, target price) directly onto the GenLayer blockchain.
-- **🧠 Intelligent Validator Consensus**: Leverages GenLayer validators to fetch live price data from the **DexScreener API** and reach consensus using LLMs to verify if targets were hit.
-- **🏆 Smart Leaderboard**: Tracks traders' on-chain reputation based on historical accuracy. Points are awarded (+15 rep) for successful predictions and deducted (-10 rep) for failed ones.
+- **🤖 On-Chain Signal Submission**: Connect your GenLayer wallet to log signal targets (symbol, entry price, target price, canonical source, window) directly onto the GenLayer blockchain.
+- **🧠 Intelligent Validator Consensus**: Leverages GenLayer validators to fetch live price data from the designated **DexScreener API** endpoint and reach consensus using LLMs to verify if targets were hit within the window.
+- **🏆 Smart Leaderboard**: Tracks traders' on-chain reputation based on historical accuracy (+15 REP for success, -10 REP for failure or expired abandonment).
 - **🕹️ Simulation Console**: Play, pause, or speed up simulated market trades to watch the screener adapt in real time.
 
 ---
@@ -21,9 +41,12 @@ By combining real-time on-chain simulation, natural language processing, and dec
 
 ```mermaid
 graph TD
-    A[Trader / Screener] -->|Submit Prediction| B(GenLayer Intelligent Contract)
-    B -->|Fetch Live Price| C[DexScreener API via gl.nondet.web.render]
-    C -->|API Response| D[LLM Consensus Verification]
+    A[Trader / Screener] -->|Submit Signal with Window & Canonical Source| B(GenLayer Intelligent Contract)
+    B -->|Check Outcome Window Status| W{Window Elapsed?}
+    W -->|Too Early: Reject| R1[Revert: Early Resolution Blocked]
+    W -->|Past Settlement Deadline: Force Fail| R2[Terminal State: FAILED -10 REP]
+    W -->|Within Settlement Window: Query Oracle| C[DexScreener Canonical API via gl.nondet.web.render]
+    C -->|API Response| D[LLM Comparative Consensus Verification]
     D -->|Equivalence Principle| E{Target Reached?}
     E -->|Yes: Reward Rep +15| F[Traders Reputation Score]
     E -->|No: Penalize Rep -10| F
@@ -32,15 +55,16 @@ graph TD
 
 ### 1. Intelligent Smart Contract (`contracts/check_signals.py`)
 Written for the **GenLayer Blockchain**, this contract is capable of non-deterministic web requests and LLM prompt execution.
-- **Non-Deterministic Web Access**: Uses `gl.nondet.web.render()` to pull live token metrics from DexScreener.
+- **Non-Deterministic Web Access**: Uses `gl.nondet.web.render()` to pull live token metrics from the canonical DexScreener endpoint.
 - **Equivalence Principle Consensus**: Leverages `gl.eq_principle.prompt_comparative()` to evaluate the JSON response of multiple validator nodes. It enforces validation consensus on whether the price hit the target, while allowing minor differences in the reason string.
+- **Permissionless Keeper & Sweeper**: Includes `force_resolve_expired()` to force terminal failure on stale/abandoned signals.
 
 ### 2. Frontend Dashboard (`src/`)
 Built with **React**, **Vite**, and **TailwindCSS**:
 - **`src/App.jsx`**: Main dashboard frame managing simulation loops, UI routing, and syncing GenLayer state.
 - **`src/components/`**: Modular UI components:
   - `InflowMonitor`: Visualizes recent transactions and wallet overlaps.
-  - `SignalScreener`: Displays active market signals with an on-chain verification trigger.
+  - `SignalScreener`: Displays active market signals with real-time outcome window countdowns, canonical source tags, and a 1-click **Sweep Expired Signals** keeper trigger.
   - `SmartLeaderboard`: Shows the reputation board for traders.
   - `SimulationConsole`: Controls the mock market feed.
 - **`src/lib/genlayerClient.js`**: Integrates `genlayer-js` to establish contract connections, read signals, and dispatch write transactions.
